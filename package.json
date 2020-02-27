@@ -1,35 +1,37 @@
 {
+    "name": "ws2812draw",
+    "version": "2.0.1",
+    "description": "Drawing to a ws2812 LED matrix",
+    "license": "MIT",
+    "repository": {
+        "type": "git",
+        "url": "https://github.com/electrovir/ws2812draw"
+    },
     "author": "electrovir",
     "bin": {
-        "ws2812draw-test": "out/ts/test.js"
+        "ws2812draw-test": "dist/ts/test.js"
     },
+    "main": "dist/ts/index.js",
+    "scripts": {
+        "build": "rm -rf build && node-gyp configure && node-gyp build",
+        "compile": "node-gyp build && npm run tsc",
+        "dev-test": "func() { npm run tsc && node dist/ts/test.js \"$@\"; }; func",
+        "example": "func() { node dist/ts/example.js \"$@\"; }; func",
+        "postinstall": "npm run build",
+        "prepublishOnly": "rm -rf node_modules && npm install && npm run tsc",
+        "test": "npm run compile && node dist/ts/test.js",
+        "test-letters": "func() { npm run tsc && node dist/ts/test-text.js \"$@\"; }; func",
+        "tsc": "rm -rf out && tsc"
+    },
+    "typings": "dist/ts/index.d.ts",
     "dependencies": {
         "bindings": "^1.5.0",
         "node-addon-api": "^2.0.0",
         "node-gyp": "^6.0.1",
         "typescript": "^3.7.3"
     },
-    "description": "Extremely basic package for drawing to a ws2812 LED matrix",
     "devDependencies": {
         "@types/bindings": "^1.3.0",
         "@types/node": "^12.12.17"
-    },
-    "license": "MIT",
-    "main": "out/ts/index.js",
-    "name": "ws2812draw",
-    "repository": {
-        "type": "git",
-        "url": "https://github.com/electrovir/ws2812draw"
-    },
-    "scripts": {
-        "build": "rm -rf build && node-gyp configure && node-gyp build",
-        "compile": "node-gyp build && npm run tsc",
-        "dev-test": "func() { npm run tsc && node out/ts/test.js \"$@\"; }; func",
-        "postinstall": "npm run build",
-        "prepublish": "npm run tsc",
-        "test": "func() { node out/ts/test.js \"$@\"; }; func",
-        "tsc": "tsc"
-    },
-    "typings": "out/ts/index.d.ts",
-    "version": "1.0.0"
+    }
 }

@@ -1,3 +1,5 @@
-src
+src/ts
 .prettierrc.json
 tsconfig.json
+build
+.vscode

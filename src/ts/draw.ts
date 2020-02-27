@@ -1,61 +1,18 @@
 import bindings from 'bindings';
+import {flattenMatrix, getMatrixSize, createMatrix} from './matrix';
+
 const BRIGHTNESS_MAX = 255;
 const BRIGHTNESS_MIN = 0;
 
-/**
- * Color examples.
- * The format is WWBBGGRR. WW is unused.
- * These directly affect the brightness of each colored LED. Thus, if you turn these values way up, the lights will be,
- * in general, brighter. There's a direct impact on how effective the brightness parameter is. For example, low color
- * values here might not even show up if the brightness is too low.
- * These colors are picked so that they'll mostly even out at higher brightnesses but they may not be unique in
- * lower brightness. For example, at brightness 7 ORANGE and RED look the same.
- */
-export enum LedColor {
-    BLACK /*         */ = 0x00000000,
-    RED /*           */ = 0x00000020,
-    ORANGE /*        */ = 0x00000720,
-    YELLOW /*        */ = 0x00001720,
-    YELLOW_GREEN /*  */ = 0x00002010,
-    GREEN /*         */ = 0x00002000,
-    TURQUOISE /*     */ = 0x00052000,
-    CYAN /*          */ = 0x00171700,
-    LIGHT_BLUE /*    */ = 0x00200700,
-    BLUE /*          */ = 0x00200000,
-    VIOLET /*        */ = 0x00200007,
-    PINK /*          */ = 0x00170017,
-    MAGENTA /*       */ = 0x00070020,
-    WHITE /*         */ = 0x00070707,
-}
-
-function flatten2dArray(inputArray: number[][]): number[] {
-    return inputArray.reduce(function(flattened, innerArray) {
-        return flattened.concat(innerArray);
-    }, []);
-}
-
 const ws2812draw = bindings('ws2812draw');
 
-function checkBrightness(brightness: number) {
+function validateBrightness(brightness: any): asserts brightness is number {
+    if (isNaN(brightness) || typeof brightness !== 'number') {
+        throw new Error(`Invalid brightness value: "${brightness}"`);
+    }
     if (brightness > BRIGHTNESS_MAX || brightness < BRIGHTNESS_MIN) {
         throw new Error('Brightness (${brightness}) is out of range: [${BRIGHTNESS_MIN}, ${BRIGHTNESS_MAX}]');
     }
-}
-
-function getArraySizes(imageArray: number[][]) {
-    const width = imageArray[0].length;
-    if (
-        imageArray.some(function(row) {
-            return row.length != width;
-        })
-    ) {
-        throw new Error(`imageArray rows are not all of equal length for drawStill`);
-    }
-
-    return {
-        height: imageArray.length,
-        width,
-    };
 }
 
 /**
@@ -64,9 +21,9 @@ function getArraySizes(imageArray: number[][]) {
  * @returns             true on draw success, otherwise false
  */
 export function drawStill(brightness: number, imageArray: number[][]): boolean {
-    checkBrightness(brightness);
-    const {height, width} = getArraySizes(imageArray);
-    return ws2812draw.drawStill(height, width, brightness, imageArray);
+    validateBrightness(brightness);
+    const {height, width} = getMatrixSize(imageArray);
+    return ws2812draw.drawStill(height, width, brightness, flattenMatrix(imageArray));
 }
 
 /**
@@ -76,7 +33,7 @@ export function drawStill(brightness: number, imageArray: number[][]): boolean {
  * @returns           true on init success, otherwise false
  */
 export function init(height: number, width: number, brightness: number): boolean {
-    checkBrightness(brightness);
+    validateBrightness(brightness);
     return ws2812draw.init(height, width, brightness);
 }
 
@@ -94,6 +51,10 @@ export function cleanUp() {
  * @returns            true on draw success, otherwise false
  */
 export function drawFrame(imageArray: number[][]): boolean {
-    const {height, width} = getArraySizes(imageArray);
-    return ws2812draw.drawFrame(height, width, flatten2dArray(imageArray));
+    const {height, width} = getMatrixSize(imageArray);
+    return ws2812draw.drawFrame(height, width, flattenMatrix(imageArray));
+}
+
+export function drawSolidColor(height: number, width: number, brightness: number, color: number) {
+    return drawStill(brightness, createMatrix(height, width, color));
 }
