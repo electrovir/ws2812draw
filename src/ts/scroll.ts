@@ -1,7 +1,8 @@
 import {LedColor} from './color';
 import {padMatrix, chopMatrix, appendMatrices, MatrixPaddingOption} from './matrix';
-import {drawStill} from './draw';
+import {init, drawFrame} from './draw';
 import {overrideDefinedProperties} from './util/object';
+import {EventEmitter} from 'events';
 
 /**
  * Options for scrolling.
@@ -11,7 +12,6 @@ import {overrideDefinedProperties} from './util/object';
  *     iterationDelayMs: 0,
  *     padding: MatrixPaddingOption.LEFT,
  *     backgroundColor: LedColor.BLACK,
- *     stopPromise: null;
  */
 export type DrawScrollOptions = Partial<{
     scrollCount: number;
@@ -19,7 +19,6 @@ export type DrawScrollOptions = Partial<{
     iterationDelayMs: number;
     padding: MatrixPaddingOption;
     padBackgroundColor: LedColor;
-    stopPromise: Promise<void> | null | undefined;
 }>;
 
 const defaultScrollOptions: Required<DrawScrollOptions> = {
@@ -28,8 +27,32 @@ const defaultScrollOptions: Required<DrawScrollOptions> = {
     iterationDelayMs: 0,
     padding: MatrixPaddingOption.LEFT,
     padBackgroundColor: LedColor.BLACK,
-    stopPromise: null,
 };
+
+/**
+ * stop event: emit this to stop the scrolling
+ *
+ * done event: listen to this to know when the scrolling is done
+ * loop event: listen to this to know when the scroll loops (and how many times it has looped)
+ */
+export interface ScrollEmitter extends EventEmitter {
+    emit(type: 'stop'): boolean;
+
+    on(type: 'done', listener: () => void): this;
+    once(type: 'done', listener: () => void): this;
+
+    on(type: 'loop', listener: (count: number) => void): this;
+    once(type: 'loop', listener: (count: number) => void): this;
+}
+
+// for internal use only
+interface InternalScrollingEventEmitter extends EventEmitter {
+    on(type: 'stop', listener: () => void): this;
+
+    emit(type: 'done'): boolean;
+
+    emit(type: 'loop', count: number): boolean;
+}
 
 /**
  * Scrolls an image (color matrix) horizontally leftwards across the LED display
@@ -39,12 +62,14 @@ const defaultScrollOptions: Required<DrawScrollOptions> = {
  * @param brightness         set the LED brightness
  * @param scrollOptions      options for scrolling, see DrawScrollOptions type for available options
  */
-export async function drawScrollingImage(
+export function drawScrollingImage(
     width: number,
     brightness: number,
     matrix: LedColor[][],
     scrollOptions: DrawScrollOptions = {},
-): Promise<void> {
+): ScrollEmitter {
+    const emitter = new EventEmitter() as InternalScrollingEventEmitter;
+
     const options: Required<DrawScrollOptions> = overrideDefinedProperties(defaultScrollOptions, scrollOptions);
     let fullMatrix = matrix;
 
@@ -57,48 +82,50 @@ export async function drawScrollingImage(
         fullMatrix = padMatrix(matrix, width, options.padBackgroundColor, options.padding);
     }
 
-    let promiseResolve: () => void;
-    const returnPromise = new Promise<void>(resolve => (promiseResolve = resolve));
     let keepScrolling = true;
-    if (options.stopPromise) {
-        options.stopPromise.then(() => (keepScrolling = false));
-    }
+    emitter.on('stop', () => {
+        keepScrolling = false;
+    });
 
-    function innerDrawScrollingString(pixelIndex: number, currentIteration: number) {
-        drawStill(
-            brightness,
-            chopMatrix(
-                // append the matrix to itself to make sure it never clips
-                appendMatrices(fullMatrix, fullMatrix),
-                pixelIndex,
-                width,
-            ),
-        );
-        setTimeout(() => {
-            if (keepScrolling) {
-                if (pixelIndex < fullMatrix[0].length) {
-                    if (currentIteration < 1) {
-                        setTimeout(() => {
-                            innerDrawScrollingString(pixelIndex + 1, currentIteration + 1);
-                        }, options.iterationDelayMs);
-                    } else {
-                        innerDrawScrollingString(pixelIndex + 1, currentIteration);
-                    }
-                } else if (options.scrollCount < 0 || currentIteration < options.scrollCount) {
-                    setTimeout(() => {
-                        innerDrawScrollingString(1, currentIteration + 1);
-                    }, options.iterationDelayMs);
-                } else {
-                    // no longer scrolling
-                    // note: if scrollCount < 0 this will never happen becasue it will (intentionally) scroll forever
-                    promiseResolve();
-                }
-            } else {
-                promiseResolve();
+    init(matrix.length, width, brightness);
+
+    function innerDrawScrollingString(pixelIndex: number, currentScrollLoop: number) {
+        if (keepScrolling) {
+            drawFrame(
+                chopMatrix(
+                    // append the matrix to itself to make sure it never clips
+                    appendMatrices(fullMatrix, fullMatrix),
+                    pixelIndex,
+                    width,
+                ),
+            );
+            // still within current loop
+            if (pixelIndex < fullMatrix[0].length) {
+                setTimeout(() => {
+                    innerDrawScrollingString(pixelIndex + 1, currentScrollLoop);
+                }, options.frameDelayMs);
             }
-        }, options.frameDelayMs);
+            // current loop is over
+            else {
+                // there shouldn't be another loop
+                // note that options.scrollCount < 0 indicates that it should loop forever
+                if (options.scrollCount >= 0 && currentScrollLoop + 1 >= options.scrollCount) {
+                    keepScrolling = false;
+                }
+                // the next loop should start
+                else {
+                    emitter.emit('loop', currentScrollLoop);
+                }
+                setTimeout(() => {
+                    innerDrawScrollingString(0, currentScrollLoop + 1);
+                }, options.iterationDelayMs);
+            }
+        } else {
+            emitter.emit('done');
+        }
     }
 
     innerDrawScrollingString(0, 0);
-    return returnPromise;
+    // the exported value should only be of the public interface
+    return (emitter as any) as ScrollEmitter;
 }

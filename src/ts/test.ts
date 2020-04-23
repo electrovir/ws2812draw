@@ -1,33 +1,31 @@
 import * as draw from './';
 import {getEnumTypedValues} from './util/object';
+import {EventEmitter} from 'events';
 
-type Test = {run: (stop: Promise<any>) => any; label: string; duration?: number};
+type Test = {run: () => draw.ScrollEmitter | void; label: string; duration?: number};
 
 const HEIGHT = 8;
 const WIDTH = 32;
-const BRIGHTNESS = 100;
+const BRIGHTNESS = 75;
 const DEFAULT_DURATION = 5000;
 
-function runScrollRainbowTest(stop: Promise<void>, options?: draw.DrawScrollOptions) {
+function runScrollRainbowTest(options?: draw.DrawScrollOptions) {
     const colorValues = getEnumTypedValues(draw.LedColor);
     const colors = draw.matrix
         .createArray(HEIGHT, Array(colorValues.length).fill(0))
         .map(row => row.map((_, index) => colorValues[index]));
-    draw.drawScrollingImage(WIDTH, BRIGHTNESS, colors, {
-        ...options,
-        stopPromise: stop,
-    });
+    return draw.drawScrollingImage(WIDTH, BRIGHTNESS, colors, options);
 }
 
 const tests: Test[] = [
     // 0
     {
-        run: () => draw.drawStill(BRIGHTNESS, draw.matrix.createMatrix(HEIGHT, WIDTH, draw.LedColor.LIGHT_BLUE)),
+        run: () => draw.drawStill(BRIGHTNESS, draw.matrix.createMatrix(HEIGHT, WIDTH, draw.LedColor.CYAN)),
         label: 'Should draw light blue on whole display',
     },
     // 1
     {
-        run: async stop => {
+        run: () => {
             let stillGoing = true;
             const colorValues = getEnumTypedValues(draw.LedColor);
             const giantMatrix = colorValues.reduce(
@@ -57,61 +55,63 @@ const tests: Test[] = [
                         }
                         animate(nextIndex);
                     }, 0);
+                } else {
+                    (emitter as any).emit('done');
                 }
             }
 
-            if (draw.init(HEIGHT, WIDTH, 50)) {
-                setTimeout(() => animate(0), 0);
-                await stop;
+            draw.init(HEIGHT, WIDTH, 50);
+            setTimeout(() => animate(0), 0);
+
+            const emitter = new EventEmitter() as draw.ScrollEmitter;
+            emitter.on('stop' as any, () => {
                 stillGoing = false;
-                draw.cleanUp();
-            } else {
-                throw new Error(`Init failed.`);
-            }
+            });
+            return emitter;
         },
         label: 'Should render frames quickly',
         duration: 20000,
     },
     // 2
     {
-        run: stop => runScrollRainbowTest(stop),
+        run: () => runScrollRainbowTest(),
         label: 'Should scroll padded rainbow',
         duration: 10000,
     },
     // 3
     {
-        run: stop => runScrollRainbowTest(stop, {padding: draw.MatrixPaddingOption.NONE}),
+        run: () => runScrollRainbowTest({padding: draw.MatrixPaddingOption.NONE}),
         label: 'Should scroll unpadded rainbow',
         duration: 10000,
     },
     // 4
     {
-        run: stop => runScrollRainbowTest(stop, {padding: draw.MatrixPaddingOption.RIGHT, scrollCount: 1}),
+        run: () => runScrollRainbowTest({padding: draw.MatrixPaddingOption.RIGHT, scrollCount: 1}),
         label: 'Should scroll RIGHT padded rainbow once',
         duration: 10000,
     },
     // 5
     {
-        run: stop => runScrollRainbowTest(stop, {padding: draw.MatrixPaddingOption.BOTH, scrollCount: 1}),
+        run: () => runScrollRainbowTest({padding: draw.MatrixPaddingOption.BOTH, scrollCount: 1}),
         label: 'Should scroll BOTH padded rainbow once',
         duration: 10000,
     },
     // 6
     {
-        run: stop => runScrollRainbowTest(stop, {padding: draw.MatrixPaddingOption.LEFT, scrollCount: 1}),
+        run: () => runScrollRainbowTest({padding: draw.MatrixPaddingOption.LEFT, scrollCount: 1}),
         label: 'Should scroll LEFT padded rainbow once',
         duration: 10000,
     },
     // 7
     {
-        run: stop => runScrollRainbowTest(stop, {padding: draw.MatrixPaddingOption.LEFT, scrollCount: 3}),
+        run: () => runScrollRainbowTest({padding: draw.MatrixPaddingOption.LEFT, scrollCount: 3}),
         label: 'Should scroll LEFT padded rainbow THRICE',
         duration: 15000,
     },
     // 8
     {
-        run: stop =>
-            runScrollRainbowTest(stop, {
+        run: () =>
+            runScrollRainbowTest({
                 padding: draw.MatrixPaddingOption.NONE,
                 frameDelayMs: 0,
             }),
@@ -119,8 +119,8 @@ const tests: Test[] = [
     },
     // 9
     {
-        run: stop =>
-            runScrollRainbowTest(stop, {
+        run: () =>
+            runScrollRainbowTest({
                 padding: draw.MatrixPaddingOption.NONE,
                 iterationDelayMs: 1000,
             }),
@@ -129,8 +129,8 @@ const tests: Test[] = [
     },
     // 10
     {
-        run: stop =>
-            runScrollRainbowTest(stop, {
+        run: () =>
+            runScrollRainbowTest({
                 padding: draw.MatrixPaddingOption.LEFT,
                 padBackgroundColor: draw.LedColor.TURQUOISE,
             }),
@@ -191,16 +191,16 @@ const tests: Test[] = [
     },
     // 16
     {
-        run: stop => {
-            draw.drawScrollingText(WIDTH, BRIGHTNESS, 'Hellow!', {}, {stopPromise: stop});
+        run: () => {
+            return draw.drawScrollingText(WIDTH, BRIGHTNESS, 'Hellow!', {}, {});
         },
         label: 'Should scroll text',
         duration: 10000,
     },
     // 17
     {
-        run: stop => {
-            draw.drawScrollingText(
+        run: () => {
+            return draw.drawScrollingText(
                 WIDTH,
                 BRIGHTNESS,
                 'Hellow!',
@@ -208,7 +208,7 @@ const tests: Test[] = [
                     backgroundColor: draw.LedColor.YELLOW,
                     foregroundColor: draw.LedColor.PINK,
                 },
-                {stopPromise: stop},
+                {},
             );
         },
         label: 'Should scroll text with color',
@@ -216,15 +216,15 @@ const tests: Test[] = [
     },
     // 18
     {
-        run: stop => {
-            draw.drawScrollingText(
+        run: () => {
+            return draw.drawScrollingText(
                 WIDTH,
                 BRIGHTNESS,
                 'Hellow!',
                 {
                     foregroundColor: draw.LedColor.RED,
                 },
-                {scrollCount: 1, stopPromise: stop},
+                {scrollCount: 1},
             );
         },
         label: 'Should scroll text only once',
@@ -258,16 +258,16 @@ const tests: Test[] = [
     },
     // 21
     {
-        run: stop => {
+        run: () => {
             const supported = draw.getSupportedLetters().join('');
-            draw.drawScrollingText(
+            return draw.drawScrollingText(
                 WIDTH,
                 BRIGHTNESS,
                 supported,
                 {
                     foregroundColor: draw.LedColor.CYAN,
                 },
-                {stopPromise: stop, frameDelayMs: 200},
+                {frameDelayMs: 200},
             );
         },
         label: 'All characters should look decent',
@@ -285,6 +285,79 @@ const tests: Test[] = [
         },
         label: 'Should draw aligned text',
     },
+    // 23
+    {
+        run: () => {
+            let stillGoing = true;
+            const colorValues = getEnumTypedValues(draw.LedColor).filter(
+                color => color !== draw.LedColor.BLACK && color !== draw.LedColor.WHITE,
+            );
+            let colorIndex = 0;
+            let nextColorIndex = 1;
+            const ratioIncrement = 0.05;
+            let currentDiffRatio = 0;
+            let colorMatrix = draw.matrix.createMatrix(HEIGHT, WIDTH, colorValues[colorIndex]);
+
+            const emitter = new EventEmitter() as draw.ScrollEmitter;
+
+            function animate() {
+                draw.drawFrame(colorMatrix);
+
+                if (stillGoing) {
+                    setTimeout(() => {
+                        currentDiffRatio += ratioIncrement;
+                        if (currentDiffRatio >= 1) {
+                            colorIndex = nextColorIndex;
+                            nextColorIndex++;
+                            if (nextColorIndex >= colorValues.length) {
+                                nextColorIndex = 0;
+                            }
+
+                            currentDiffRatio = ratioIncrement;
+                        }
+
+                        const colorToDraw = draw.color.diffColors(
+                            colorValues[colorIndex],
+                            colorValues[nextColorIndex],
+                            currentDiffRatio,
+                        );
+
+                        colorMatrix = draw.matrix.createMatrix(HEIGHT, WIDTH, colorToDraw);
+                        animate();
+                    }, 0);
+                } else {
+                    (emitter as any).emit('done');
+                }
+            }
+
+            draw.init(HEIGHT, WIDTH, 50);
+            setTimeout(() => animate(), 0);
+
+            emitter.on('stop' as any, () => {
+                stillGoing = false;
+            });
+            return emitter;
+        },
+        label: 'Should smootly transition over all colors',
+        duration: 20000,
+    },
+    // 24
+    {
+        run: () => {
+            const colorValues = getEnumTypedValues(draw.LedColor);
+            const colorWidth = Math.floor(WIDTH / colorValues.length);
+
+            const colorMatrix = colorValues.reduce((accum, currentColor) => {
+                return draw.matrix.appendMatrices(accum, draw.matrix.createMatrix(HEIGHT, colorWidth, currentColor));
+            }, draw.matrix.createMatrix(HEIGHT, 0, draw.LedColor.CYAN) as draw.LedColor[][]);
+
+            draw.drawStill(
+                BRIGHTNESS,
+                draw.matrix.padMatrix(colorMatrix, WIDTH, draw.LedColor.BLACK, draw.MatrixPaddingOption.LEFT),
+            );
+        },
+        label: 'Color brightness comparisons',
+    },
 ];
 
 function countDown(time: number) {
@@ -298,23 +371,36 @@ function countDown(time: number) {
 async function runTest(test: Test) {
     console.log(`Testing: ${test.label}`);
     const duration = test.duration || DEFAULT_DURATION;
-    const promise = new Promise(resolve => setTimeout(() => resolve(), duration));
     countDown(duration);
-    test.run(promise);
-    return promise;
-}
-
-async function runAllTests(testArray: Test[], index = 0) {
-    if (index < testArray.length) {
-        console.log(`index ${index} out of ${testArray.length - 1} total`);
-        await runTest(testArray[index]);
-        runAllTests(testArray, index + 1);
-    }
+    const emitter = test.run();
+    return await Promise.all([
+        new Promise(resolve => {
+            if (emitter) {
+                emitter.on('done', () => {
+                    resolve();
+                });
+            } else {
+                resolve();
+            }
+        }),
+        new Promise(resolve => {
+            setTimeout(() => {
+                if (emitter) {
+                    emitter.emit('stop');
+                }
+                resolve();
+            }, duration);
+        }),
+    ]);
 }
 
 async function runTestsCli(testArray: Test[], exclusiveIndex?: number) {
     if (exclusiveIndex == undefined) {
-        runAllTests(testArray);
+        for (let index = 0; index < testArray.length; index++) {
+            console.log(`index ${index} out of ${testArray.length - 1} total`);
+            await runTest(testArray[index]);
+            draw.cleanUp();
+        }
     } else {
         console.log(`Only testing index ${exclusiveIndex}`);
         await runTest(testArray[exclusiveIndex]);

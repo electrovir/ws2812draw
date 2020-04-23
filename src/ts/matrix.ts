@@ -3,7 +3,7 @@ export function appendMatrices<T>(a: T[][], b: T[][]): T[][] {
 }
 
 export function flattenMatrix(inputArray: number[][]): number[] {
-    return inputArray.reduce(function(flattened, innerArray) {
+    return inputArray.reduce((flattened, innerArray) => {
         return flattened.concat(innerArray);
     }, []);
 }
@@ -11,7 +11,7 @@ export function flattenMatrix(inputArray: number[][]): number[] {
 export function getMatrixSize<T>(imageArray: T[][]) {
     const width = imageArray[0].length;
     if (
-        imageArray.some(function(row) {
+        imageArray.some(row => {
             return row.length != width;
         })
     ) {
@@ -45,15 +45,25 @@ export function chopMatrix<T>(matrix: T[][], index: number, length?: number): T[
 
 /**
  * Used to determine how to pad matrices.
- * LEFT:   add padding on the left side (image gets pushed to right side)
- * RIGHT:  add padding on the right side (image gets pushed to left side)
- * BOTH:   add padding to both sides evenly (image gets centered)
- * NONE:   don't add any padding
+ * The value name (ex. LEFT) is the side of the given matrix that the padding is added to.
+ * The opposite side remains unchagned. (ex. LEFT padding will result in the left side of the matrix being filled up)
  */
 export enum MatrixPaddingOption {
+    /**
+     * add padding on the left side (image gets pushed to right side)
+     */
     LEFT = 'left',
+    /**
+     * add padding on the right side (image gets pushed to left side)
+     */
     RIGHT = 'right',
+    /**
+     * add padding to both sides evenly (image gets centered)
+     */
     BOTH = 'both',
+    /**
+     * don't add any padding
+     */
     NONE = 'none',
 }
 

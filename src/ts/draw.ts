@@ -6,12 +6,16 @@ const BRIGHTNESS_MIN = 0;
 
 const ws2812draw = bindings('ws2812draw');
 
+export class Ws2812drawError extends Error {
+    public name = 'Ws2812drawError';
+}
+
 function validateBrightness(brightness: any): asserts brightness is number {
     if (isNaN(brightness) || typeof brightness !== 'number') {
-        throw new Error(`Invalid brightness value: "${brightness}"`);
+        throw new Ws2812drawError(`invalid brightness value: "${brightness}"`);
     }
     if (brightness > BRIGHTNESS_MAX || brightness < BRIGHTNESS_MIN) {
-        throw new Error('Brightness (${brightness}) is out of range: [${BRIGHTNESS_MIN}, ${BRIGHTNESS_MAX}]');
+        throw new Ws2812drawError('brightness (${brightness}) is out of range: [${BRIGHTNESS_MIN}, ${BRIGHTNESS_MAX}]');
     }
 }
 
@@ -20,10 +24,13 @@ function validateBrightness(brightness: any): asserts brightness is number {
  * @param imageArray    an array of colors for each pixel
  * @returns             true on draw success, otherwise false
  */
-export function drawStill(brightness: number, imageArray: number[][]): boolean {
+export function drawStill(brightness: number, imageArray: number[][]): void {
     validateBrightness(brightness);
     const {height, width} = getMatrixSize(imageArray);
-    return ws2812draw.drawStill(height, width, brightness, flattenMatrix(imageArray));
+    const result = ws2812draw.drawStill(height, width, brightness, flattenMatrix(imageArray));
+    if (!result) {
+        throw new Ws2812drawError('initialization for drawStill failed');
+    }
 }
 
 /**
@@ -32,9 +39,12 @@ export function drawStill(brightness: number, imageArray: number[][]): boolean {
  * @param brightness  led brightness, a number between 0 and 255 inclusive
  * @returns           true on init success, otherwise false
  */
-export function init(height: number, width: number, brightness: number): boolean {
+export function init(height: number, width: number, brightness: number): void {
     validateBrightness(brightness);
-    return ws2812draw.init(height, width, brightness);
+    const result = ws2812draw.init(height, width, brightness);
+    if (!result) {
+        throw new Ws2812drawError(`initialization failed`);
+    }
 }
 
 /**
@@ -50,11 +60,14 @@ export function cleanUp() {
  * @param imageArray   The matrix of colors to draw. The dimensions of this matrix should match those passed to init.
  * @returns            true on draw success, otherwise false
  */
-export function drawFrame(imageArray: number[][]): boolean {
+export function drawFrame(imageArray: number[][]): void {
     const {height, width} = getMatrixSize(imageArray);
-    return ws2812draw.drawFrame(height, width, flattenMatrix(imageArray));
+    const result = ws2812draw.drawFrame(height, width, flattenMatrix(imageArray));
+    if (!result) {
+        throw new Ws2812drawError(`must be initialized before drawing a frame`);
+    }
 }
 
-export function drawSolidColor(height: number, width: number, brightness: number, color: number) {
-    return drawStill(brightness, createMatrix(height, width, color));
+export function drawSolidColor(height: number, width: number, brightness: number, color: number): void {
+    drawStill(brightness, createMatrix(height, width, color));
 }

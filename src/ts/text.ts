@@ -2,7 +2,7 @@ import {LedColor} from './color';
 import {stringToLetterMatrix, monospacePadLetter, emptyLetter, letterSpacer} from './letter';
 import {getMatrixSize, createMatrix, maskMatrix, appendMatrices, MatrixPaddingOption, padMatrix} from './matrix';
 import {drawStill} from './draw';
-import {DrawScrollOptions, drawScrollingImage} from './scroll';
+import {DrawScrollOptions, drawScrollingImage, ScrollEmitter} from './scroll';
 import {overrideDefinedProperties} from './util/object';
 
 /**
@@ -90,13 +90,13 @@ export function drawText(
     input: string,
     options: LetterOptions | LetterOptions[] = {},
     alignmentOptions?: AlignmentOptions,
-) {
+): void {
     let matrix = textToColorMatrix(input, options);
     if (alignmentOptions) {
         const padColor = alignmentOptions.padColor == undefined ? LedColor.BLACK : alignmentOptions.padColor;
         matrix = padMatrix(matrix, alignmentOptions.width, padColor, alignmentOptions.padding);
     }
-    return drawStill(brightness, matrix);
+    drawStill(brightness, matrix);
 }
 
 /**
@@ -117,7 +117,7 @@ export function drawScrollingText(
     input: string,
     letterOptions: LetterOptions | LetterOptions[] = {},
     scrollOptions: DrawScrollOptions = {},
-) {
+): ScrollEmitter {
     const matrix = textToColorMatrix(input + ' ', letterOptions);
     return drawScrollingImage(width, brightness, matrix, scrollOptions);
 }

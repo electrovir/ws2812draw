@@ -3,3 +3,4 @@ src/ts
 tsconfig.json
 build
 .vscode
+.prettierignore

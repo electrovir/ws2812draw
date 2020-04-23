@@ -11,10 +11,7 @@ let lastTime = process.hrtime()[0];
 let frameCount = 0;
 
 function draw(increment: boolean) {
-    if (!drawFrame(values)) {
-        console.error('Drawing failed');
-        return false;
-    }
+    drawFrame(values);
     if (increment) {
         values = values.map(row =>
             row.map(value => colorValues[(colorValues.indexOf(value) + 1) % colorValues.length]),
@@ -43,10 +40,8 @@ function animate(increment: boolean) {
 }
 
 export function testDraw(height: number, width: number, brightness: number, inputColor?: number) {
-    if (!init(height, width, brightness)) {
-        console.error('init failed');
-        return;
-    }
+    init(height, width, brightness);
+
     var stdin = process.stdin;
     // without this, we would only get streams once enter is pressed
     stdin.setRawMode(true);
@@ -55,7 +50,7 @@ export function testDraw(height: number, width: number, brightness: number, inpu
     stdin.resume();
     stdin.setEncoding('utf8');
     // on any data into stdin
-    stdin.on('data', function(buffer) {
+    stdin.on('data', buffer => {
         const key = buffer.toString();
         const oldDelay = frameDelay;
         // ctrl-c ( end of text )

@@ -9,17 +9,73 @@
  */
 export enum LedColor {
     BLACK /*         */ = 0x00000000,
-    RED /*           */ = 0x00000020,
-    ORANGE /*        */ = 0x00000720,
-    YELLOW /*        */ = 0x00001720,
-    YELLOW_GREEN /*  */ = 0x00002010,
-    GREEN /*         */ = 0x00002000,
+    RED /*           */ = 0x0000002d,
+    ORANGE /*        */ = 0x0000082d,
+    YELLOW /*        */ = 0x00001719,
+    GREEN /*         */ = 0x00001c00,
     TURQUOISE /*     */ = 0x00052000,
-    CYAN /*          */ = 0x00171700,
-    LIGHT_BLUE /*    */ = 0x00200700,
+    CYAN /*          */ = 0x00121200,
     BLUE /*          */ = 0x00200000,
-    VIOLET /*        */ = 0x00200007,
-    PINK /*          */ = 0x00170017,
-    MAGENTA /*       */ = 0x00070020,
-    WHITE /*         */ = 0x00070707,
+    VIOLET /*        */ = 0x001a0009,
+    MAGENTA /*       */ = 0x00170017,
+    PINK /*          */ = 0x00080017,
+    WHITE /*         */ = 0x000c0c0c,
+}
+
+export function diffColors(a: LedColor, b: LedColor, ratio: number | ColorChannels = 0.5) {
+    const aChannels = splitIntoColorChannels(a);
+    const bChannels = splitIntoColorChannels(b);
+
+    const diff: ColorChannels =
+        typeof ratio === 'number'
+            ? {
+                  red: (bChannels.red - aChannels.red) * ratio,
+                  green: (bChannels.green - aChannels.green) * ratio,
+                  blue: (bChannels.blue - aChannels.blue) * ratio,
+              }
+            : {
+                  red: (bChannels.red - aChannels.red) * ratio.red,
+                  green: (bChannels.green - aChannels.green) * ratio.green,
+                  blue: (bChannels.blue - aChannels.blue) * ratio.blue,
+              };
+
+    const added = {
+        red: aChannels.red + diff.red,
+        green: aChannels.green + diff.green,
+        blue: aChannels.blue + diff.blue,
+    };
+
+    return combineColorChannels(added);
+}
+
+export type ColorChannels = {
+    red: LedColor;
+    green: LedColor;
+    blue: LedColor;
+};
+
+export function toHex(color: LedColor): string {
+    return color.toString(16).padStart(6, '0');
+}
+
+export function combineColorChannels(channels: ColorChannels): LedColor {
+    const combinedString =
+        '0x' +
+        Math.floor(channels.blue).toString(16).padStart(2, '0') +
+        Math.floor(channels.green).toString(16).padStart(2, '0') +
+        Math.floor(channels.red).toString(16).padStart(2, '0');
+    const combined = Number(combinedString);
+
+    return combined;
+}
+
+export function splitIntoColorChannels(color: LedColor): ColorChannels {
+    const hexColor = toHex(color);
+    const split = {
+        red: Number('0x' + hexColor.substring(4, 6)),
+        green: Number('0x' + hexColor.substring(2, 4)),
+        blue: Number('0x' + hexColor.substring(0, 2)),
+    };
+
+    return split;
 }
