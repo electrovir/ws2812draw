@@ -2,104 +2,28 @@
 
 Made for running on a Raspberry Pi, drawing to a ws2812 led matrix ([like this one](https://www.amazon.com/dp/B01DC0IPVU)). Uses the C library [rpi_ws281x](https://github.com/jgarff/rpi_ws281x).
 
-# Usage
-
-## Install
+# Install
 
 ```
 npm install ws2812draw
 ```
 
-## Example
+# Example test
 
 ```bash
 sudo su
 npm run example
 ```
 
-Root access is required to draw to the matrix. Watch console output to see instructions for this example.
+Root access is required to draw to the matrix. Read the console output to see instructions for this example. Use this to test if your pi + LED matrix setup.
 
-## API
+# API
 
-Exported members:
-
-```typescript
-function drawStill(brightness: number, imageArray: number[][]): boolean;
-function drawSolidColor(height: number, width: number, brightness: number, color: number): boolean;
-
-function init(height: number, width: number, brightness: number): boolean;
-function drawFrame(imageArray: number[][]): boolean;
-function cleanUp(): void;
-
-function drawScrollingImage(width: number, brightness: number, matrix: LedColor[][], scrollOptions?: DrawScrollOptions): Promise<void>;
-type DrawScrollOptions = Partial<{
-    scrollCount: number;
-    frameDelayMs: number;
-    iterationDelayMs: number;
-    padding: MatrixPaddingOption;
-    padBackgroundColor: LedColor;
-    stopPromise: Promise<void> | null | undefined;
-}>;
-
-function drawText(brightness: number, input: string, options?: LetterOptions | LetterOptions[], alignmentOptions?: AlignmentOptions): boolean;
-function drawScrollingText(width: number, brightness: number, input: string, letterOptions?: LetterOptions | LetterOptions[], scrollOptions?: DrawScrollOptions): Promise<void>;
-function textToColorMatrix(input: string, inputOptions?: LetterOptions | LetterOptions[]): LedColor[][];
-type AlignmentOptions = {
-    width: number;
-    padding: MatrixPaddingOption;
-    padColor?: LedColor;
-};
-type LetterOptions = Partial<{
-    foregroundColor: LedColor;
-    backgroundColor: LedColor;
-    monospace: boolean;
-}>;
-
-function registerCustomLetter(letter: string, matrix: LetterMatrix): void;
-function getSupportedLetters(): string[];
-
-enum MatrixPaddingOption {
-    LEFT,
-    RIGHT,
-    BOTH,
-    NONE,
-}
-
-const matrix = {
-    function appendMatrices<T>(a: T[][], b: T[][]): T[][];
-    function flattenMatrix(inputArray: number[][]): number[];
-    function getMatrixSize<T>(imageArray: T[][]): {
-        height: number;
-        width: number;
-    };
-    function createArray<T>(width: number, fillValue: T): T[];
-    function createMatrix<T>(height: number, width: number, fillValue: T): T[][];
-    function chopMatrix<T>(matrix: T[][], index: number, length?: number): T[][];
-    function padMatrix<T>(matrix: T[][], width: number, paddingFill: T, paddingStyle?: MatrixPaddingOption): T[][];
-    function maskMatrix<T>(colorMatrix: T[][], mask: (boolean | number | undefined | null)[][], emptyFill: T): T[][];
-};
-
-enum LedColor {
-    BLACK,
-    RED,
-    ORANGE,
-    YELLOW,
-    YELLOW_GREEN,
-    GREEN,
-    TURQUOISE,
-    CYAN,
-    LIGHT_BLUE,
-    BLUE,
-    VIOLET,
-    PINK,
-    MAGENTA,
-    WHITE,
-}
-```
+See [`index.ts`](https://github.com/electrovir/ws2812draw/blob/master/src/ts/index.ts) for exported members.
 
 ## Draw Image
 
-Pass in a 2D array of colors to `drawStill`. This function has _relatively_ poor performance if drawing many frames in succession. Meaning, I get ~60fps on a 8x32 LED matrix. However, for a static image it is very simple.
+Pass in a 2D array of colors to `drawStill`. This function has _relatively_ poor performance if drawing many frames in succession. Meaning, I get ~60fps on a 8x32 LED matrix. However, it is extremeley easy to use for a still image that doesn't change a lot.
 
 ```typescript
 drawStill(brightness: number, imageArray: number[][]): boolean;
@@ -119,15 +43,25 @@ Note that on my 8x32 LED matrix this doesn't draw as a rectangle, it draws in a 
 
 ### Drawing a Scrolling Image
 
-Draws and scrolls an image that can be bigger (or smaller) than the actual LED display.
+Draws and an image that can be bigger (or smaller) than the actual LED display. It then scrolls the image across the matrix. This function returns an `EventEmitter` which can be used to know when the scrolling is done or to instruct the scrolling to stop.
 
 ```typescript
-function drawScrollingImage(
+export declare function drawScrollingImage(
     width: number,
     brightness: number,
     matrix: LedColor[][],
     scrollOptions?: DrawScrollOptions,
-): Promise<void>;
+): ScrollEmitter;
+```
+
+```typescript
+export interface ScrollEmitter extends EventEmitter {
+    emit(type: 'stop'): boolean;
+    on(type: 'done', listener: () => void): this;
+    once(type: 'done', listener: () => void): this;
+    on(type: 'loop', listener: (count: number) => void): this;
+    once(type: 'loop', listener: (count: number) => void): this;
+}
 ```
 
 Example:
@@ -141,7 +75,7 @@ drawScrollingImage(50, [
     [LedColor.BLACK, LedColor.RED, LedColor.ORANGE],
 ]);
 // with options
-drawScrollingImage(
+cosnt emitter = drawScrollingImage(
     50,
     [
         [LedColor.BLACK, LedColor.RED, LedColor.ORANGE],
@@ -153,9 +87,10 @@ drawScrollingImage(
         iterationDelayMs: 100,
         padding: MatrixPaddingOption.LEFT,
         padBackgroundColor: LedColor.BLACK,
-        stopPromise: null, // if this is a promise and it ever resolves, the scrolling will stop
     },
 );
+emitter.emit('stop'); // do this to instantly stop the scrolling
+
 ```
 
 ## Draw Text
@@ -309,7 +244,7 @@ Colors are stored in Hex so they're easier to read. See the `LedColor` export fo
 0x00BBGGRR
 ```
 
-Note that doing `0x00FFFFFF` will be extremely bright. For example, the default white color is only `0x00070707`.
+Note that doing `0x00FFFFFF` will be extremely bright. For example, the default white color is only `0x000c0c0c`.
 
 ## Permissions
 
@@ -324,4 +259,4 @@ sudo su
 npm test [test-index]
 ```
 
-If no test-index is given then all the tests will run. This may take several minutes, must run with a LED display attached, and must be visually inspected manually.
+If no test-index is given then all the tests will run. This may take several minutes, must run with a LED display attached, and must be inspected one-by-one manually.
