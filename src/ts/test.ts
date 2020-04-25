@@ -401,12 +401,42 @@ const tests: Test[] = [
                 scrollCount: 2,
             }),
         label: 'Should have blank frame when scrolling RIGHT and only scroll TWICE',
-        duration: 25000,
+        duration: 20000,
     },
     // 28
     {
         run: () => runScrollRainbowTest({padding: draw.MatrixPaddingOption.NONE, scrollDirection: 'right'}),
         label: 'Should work scrolling right',
+        duration: 10000,
+    },
+    // 29
+    {
+        run: () =>
+            draw.drawScrollingText(
+                WIDTH,
+                BRIGHTNESS,
+                'Hi',
+                {foregroundColor: draw.LedColor.CYAN},
+                {
+                    emptyFrameBetweenLoops: true,
+                    loopDelayMs: 2000,
+                    padding: draw.MatrixPaddingOption.LEFT,
+                    scrollCount: 2,
+                },
+            ),
+        label: 'Should draw scrolling, padded, short text normally',
+        duration: 10000,
+    },
+    // 29
+    {
+        run: () =>
+            draw.drawText(
+                BRIGHTNESS,
+                'Hi',
+                {foregroundColor: draw.LedColor.CYAN},
+                {width: WIDTH, padding: draw.MatrixPaddingOption.LEFT},
+            ),
+        label: 'Should draw short, padded text normally',
         duration: 10000,
     },
 ];

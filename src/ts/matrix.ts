@@ -128,8 +128,9 @@ export function padMatrix<T>(
         const {left, right} = getPadDifference(matrix, width, paddingStyle);
         const leftPadMatrix = createMatrix(matrix.length, left, paddingFill);
         const rightPadMatrix = createMatrix(matrix.length, right, paddingFill);
+        const appendedMatrix = appendMatrices(leftPadMatrix, matrix, rightPadMatrix);
 
-        return appendMatrices(leftPadMatrix, matrix, rightPadMatrix);
+        return appendedMatrix;
     } else {
         return matrix;
     }

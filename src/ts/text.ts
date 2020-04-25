@@ -63,15 +63,13 @@ export function textToColorMatrix(input: string, inputOptions: LetterOptions | L
                 // save off the current character's options in case the options array is only partially full
                 lastOptions = currentOptions;
             }
-            return maskMatrix(colors, letterMatrix, backgroundColor);
+            const masked = maskMatrix(colors, letterMatrix, backgroundColor);
+            return masked;
         })
-        .reduce((accum: LedColor[][] | undefined, currentLetterMatrix, index) => {
+        .reduce((accum: LedColor[][], currentLetterMatrix, index) => {
             const currentOptions = (Array.isArray(options) ? options[index] : options) || lastOptions;
-            return appendMatrices(
-                appendMatrices(!!accum ? accum : emptyLetter, letterSpacer(currentOptions.backgroundColor)),
-                currentLetterMatrix,
-            );
-        });
+            return appendMatrices(accum, letterSpacer(currentOptions.backgroundColor), currentLetterMatrix);
+        }, []);
 
     return coloredTextMatrix;
 }
@@ -118,6 +116,6 @@ export function drawScrollingText(
     letterOptions: LetterOptions | LetterOptions[] = {},
     scrollOptions: DrawScrollOptions = {},
 ): ScrollEmitter {
-    const matrix = textToColorMatrix(input + ' ', letterOptions);
+    const matrix = textToColorMatrix(input, letterOptions);
     return drawScrollingImage(width, brightness, matrix, scrollOptions);
 }
