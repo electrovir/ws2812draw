@@ -1,5 +1,23 @@
-export function appendMatrices<T>(a: T[][], b: T[][]): T[][] {
-    return a.map((aRow, index) => aRow.concat(b[index]));
+export class MatrixError extends Error {
+    public name = 'MatrixError';
+}
+
+export function appendMatrices<T>(...matrices: T[][][]): T[][] {
+    matrices.forEach(matrix => assertConsistentMatrixSize(matrix));
+    return matrices.reduce((accum, current) => {
+        return appendMatrixPair(accum, current);
+    }, [] as T[][]);
+}
+
+/**
+ * Don't export this, this assumes that matrix size consistency has already been asserted
+ */
+function appendMatrixPair<T>(a: T[][], b: T[][]): T[][] {
+    if (a.length && [0].length) {
+        return a.map((aRow, index) => aRow.concat(b[index]));
+    } else {
+        return b;
+    }
 }
 
 export function flattenMatrix(inputArray: number[][]): number[] {
@@ -8,19 +26,12 @@ export function flattenMatrix(inputArray: number[][]): number[] {
     }, []);
 }
 
-export function getMatrixSize<T>(imageArray: T[][]) {
-    const width = imageArray[0].length;
-    if (
-        imageArray.some(row => {
-            return row.length != width;
-        })
-    ) {
-        throw new Error(`imageArray rows are not all of equal length for drawStill`);
-    }
+export function getMatrixSize<T>(matrix: T[][]) {
+    assertConsistentMatrixSize(matrix);
 
     return {
-        height: imageArray.length,
-        width,
+        height: matrix.length,
+        width: matrix[0].length,
     };
 }
 
@@ -67,29 +78,58 @@ export enum MatrixPaddingOption {
     NONE = 'none',
 }
 
+export function assertConsistentMatrixSize<T>(matrix: T[][]): void {
+    if (matrix.length) {
+        const width = matrix[0].length;
+        if (matrix.some(row => row.length !== width)) {
+            throw new MatrixError(`matrix rows are not all of equal length`);
+        }
+    }
+}
+
+export function getPadDifference<T>(
+    matrix: T[][],
+    width: number,
+    paddingStyle: MatrixPaddingOption,
+): {left: number; right: number} {
+    assertConsistentMatrixSize(matrix);
+    const difference = width - matrix[0].length;
+    switch (paddingStyle) {
+        case MatrixPaddingOption.LEFT:
+            return {
+                left: difference,
+                right: 0,
+            };
+        case MatrixPaddingOption.RIGHT:
+            return {
+                left: 0,
+                right: difference,
+            };
+        case MatrixPaddingOption.BOTH:
+            return {
+                left: Math.floor(difference / 2),
+                right: Math.ceil(difference / 2),
+            };
+        case MatrixPaddingOption.NONE:
+            return {
+                left: 0,
+                right: 0,
+            };
+    }
+}
+
 export function padMatrix<T>(
     matrix: T[][],
     width: number,
     paddingFill: T,
     paddingStyle: MatrixPaddingOption = MatrixPaddingOption.LEFT,
 ): T[][] {
-    if (matrix[0].length < width) {
-        return matrix.map(row => {
-            const difference = width - row.length;
-            switch (paddingStyle) {
-                case MatrixPaddingOption.LEFT:
-                    return createArray(difference, paddingFill).concat(row);
-                case MatrixPaddingOption.RIGHT:
-                    return row.concat(createArray(difference, paddingFill));
-                case MatrixPaddingOption.BOTH:
-                    return createArray(Math.floor(difference / 2), paddingFill).concat(
-                        row,
-                        createArray(Math.ceil(difference / 2), paddingFill),
-                    );
-                case MatrixPaddingOption.NONE:
-                    return row;
-            }
-        });
+    if (matrix[0].length < width && paddingStyle !== MatrixPaddingOption.NONE) {
+        const {left, right} = getPadDifference(matrix, width, paddingStyle);
+        const leftPadMatrix = createMatrix(matrix.length, left, paddingFill);
+        const rightPadMatrix = createMatrix(matrix.length, right, paddingFill);
+
+        return appendMatrices(leftPadMatrix, matrix, rightPadMatrix);
     } else {
         return matrix;
     }

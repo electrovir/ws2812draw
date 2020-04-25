@@ -1,6 +1,6 @@
 # WS2812 Draw
 
-Made for running on a Raspberry Pi, drawing to a ws2812 led matrix ([like this one](https://www.amazon.com/dp/B01DC0IPVU)). Uses the C library [rpi_ws281x](https://github.com/jgarff/rpi_ws281x).
+Draw to a ws2812 LED matrix ([like this one](https://www.amazon.com/dp/B01DC0IPVU)) with a Raspberry Pi. Uses the C library [rpi_ws281x](https://github.com/jgarff/rpi_ws281x).
 
 # Install
 
@@ -8,7 +8,7 @@ Made for running on a Raspberry Pi, drawing to a ws2812 led matrix ([like this o
 npm install ws2812draw
 ```
 
-# Example test
+# Example
 
 ```bash
 sudo su
@@ -23,7 +23,7 @@ See [`index.ts`](https://github.com/electrovir/ws2812draw/blob/master/src/ts/ind
 
 ## Draw Image
 
-Pass in a 2D array of colors to `drawStill`. This function has _relatively_ poor performance if drawing many frames in succession. Meaning, I get ~60fps on a 8x32 LED matrix. However, it is extremeley easy to use for a still image that doesn't change a lot.
+Pass in a 2D array of colors to `drawStill`. This function has _relatively_ poor performance if drawing many frames in succession. Meaning, I get about 60 fps on a 8x32 LED matrix (bigger matrices quickly drop off). However, this method should be prefered for its ease of use for still image that doesn't change rapidly.
 
 ```typescript
 drawStill(brightness: number, imageArray: number[][]);
@@ -39,14 +39,14 @@ drawStill(50, [
 ]);
 ```
 
-Note that on my 8x32 LED matrix this doesn't draw as a rectangle, it draws in a line since the array height doesn't match up correctly.
+Note that on my 8x32 LED matrix this example above doesn't draw as a rectangle, it draws in a line. This is beacuse the array height doesn't match up correctly with the LED matrix height.
 
 ### Drawing a Scrolling Image
 
-Draws and an image that can be bigger (or smaller) than the actual LED display. It then scrolls the image across the matrix. This function returns an `EventEmitter` which can be used to know when the scrolling is done or to instruct the scrolling to stop.
+Draws an image that can be bigger (or smaller) than the actual LED display. It then scrolls the image across the LED matrix. This function returns an `EventEmitter` which can be used to know when the scrolling is done or to instruct the scrolling to stop.
 
 ```typescript
-export declare function drawScrollingImage(
+function drawScrollingImage(
     width: number,
     brightness: number,
     matrix: LedColor[][],
@@ -55,7 +55,7 @@ export declare function drawScrollingImage(
 ```
 
 ```typescript
-export interface ScrollEmitter extends EventEmitter {
+interface ScrollEmitter extends EventEmitter {
     emit(type: 'stop'): boolean;
     on(type: 'done', listener: () => void): this;
     once(type: 'done', listener: () => void): this;
@@ -83,19 +83,21 @@ cosnt emitter = drawScrollingImage(
     ],
     {
         scrollCount: -1, // -1 means infinite
-        frameDelayMs: 17,
-        loopDelayMs: 100,
+        frameDelayMs: 100,
+        loopDelayMs: 0,
         padding: MatrixPaddingOption.LEFT,
         padBackgroundColor: LedColor.BLACK,
+        emptyFrameBetweenLoops: false,
+        scrollDirection: 'left',
     },
 );
-emitter.emit('stop'); // do this to instantly stop the scrolling
 
+emitter.emit('stop'); // do this to instantly stop the scrolling
 ```
 
 ## Draw Text
 
-Draws text. All text is converted into uppercase. Supports numbers and some special characters and punctuation marks too. Options can be an array for each individual character or a single option for the whole string.
+Draws text. All text is converted into uppercase. Supports numbers in addition to some special characters and punctuation. Options can be an array for each individual character or a single option for the whole string.
 
 ```typescript
 function drawText(
@@ -109,8 +111,9 @@ function drawText(
 Example:
 
 ```typescript
-import {drawText} from 'ws2812draw';
+import {drawText, LedColor, MatrixPaddingOption} from 'ws2812draw';
 // options are optional
+
 // without options
 drawText(50, 'Hi!');
 // with options
@@ -120,12 +123,22 @@ drawText(50, 'Hi!', ({
     monospace: false,
 });
 // with alignment options
-drawText(50, 'Hi!', ({
-    padding: LedColor.RED,
-    backgroundColor: LedColor.BLUE,
-    monospace: false,
-});
+drawText(
+    50,
+    'Hi!',
+    {
+        foregroundColor: LedColor.RED,
+        backgroundColor: LedColor.BLUE,
+    },
+    {
+        width: 32,
+        padding: MatrixPaddingOption.LEFT,
+        padColor: LedColor.BLUE,
+    },
+);
 ```
+
+### Supported characters
 
 To get a full list of supported string characters use the following function:
 
@@ -139,6 +152,8 @@ Example:
 import {getSupportedLetters} from 'ws2812draw';
 getSupportedLetters();
 ```
+
+### Registering characters
 
 To register your own custom characters along with a matrix mask for that character, use the following function. The matrix mask must be 8 elements in height and from 2 to 6 (inclusive) elements wide.
 
@@ -162,11 +177,13 @@ registerCustomLetter('<', [
 ]);
 ```
 
+This function can also be used to override any default character masks.
+
 ### Draw Scrolling Text
 
-The draw text function above isn't smart at all about a string being wider than the actual display, it just draws it and whatever fits end up such. The following function will scroll through strings, allowing pauses and speed control as well as color controls.
+The draw text function above isn't smart at all about a string being wider than the actual display; it just draws the text and whatever fits is what you see. The following function will scroll through strings, allowing speed control among other configuration.
 
-`letterOptions` is the same as in the `drawText` function explained above. `scrollOptions` is the same as in the `drawScrollingImage` function also explained above.
+`letterOptions` is the same as in the `drawText` function explained above. `scrollOptions` is the same as in the `drawScrollingImage` function explained further above.
 
 ```typescript
 function drawScrollingText(
@@ -192,14 +209,14 @@ draw.drawScrollingText(WIDTH, BRIGHTNESS, 'Hellow world!');
 init(height: number, width: number, brightness: number): boolean;
 ```
 
-Make sure to call `cleanUp` as shown below when done drawing.
-
 Example:
 
 ```typescript
 import {init} from 'ws2812draw';
-const success = init(2, 3, 50);
+init(2, 3, 50);
 ```
+
+Make sure to call `cleanUp`, as explained in a following section, when done drawing.
 
 ### Draw a frame
 
@@ -207,7 +224,7 @@ const success = init(2, 3, 50);
 drawFrame(imageArray: number[][]): boolean;
 ```
 
-This can be run within a loop for high frame rates. I'm getting nearly 100 fps on a 8x32 board. Larger boards lead to lower frame rates.
+This can be run within a loop for high frame rates. I'm getting nearly 100 fps (vs `drawStill`'s 60 fps) on a 8x32 board. Larger boards lead to lower frame rates.
 
 Any rows or cells larger than the initialized size are ignored. Fewer rows or cells will result in messed up LED colors.
 
@@ -215,7 +232,7 @@ Example:
 
 ```typescript
 import {LedColor, drawFrame} from 'ws2812draw';
-const success = drawFrame([
+drawFrame([
     [LedColor.BLACK, LedColor.RED, LedColor.ORANGE],
     [LedColor.BLACK, LedColor.RED, LedColor.ORANGE],
 ]);
@@ -238,25 +255,23 @@ cleanUp();
 
 ## Colors
 
-Colors are stored in Hex so they're easier to read. See the `LedColor` export for some examples. For custom colors, use the following format:
+Colors are stored in Hex so they're easier to read. See the [`LedColor` enum](https://github.com/electrovir/ws2812draw/blob/master/src/ts/color.ts) for the defaults. For custom colors, use the following format:
 
 ```
-0x00BBGGRR
+0xBBGGRR
 ```
 
-Note that doing `0x00FFFFFF` will be extremely bright. For example, the default white color is only `0x000c0c0c`.
+Note that doing `0xFFFFFF` will be extremely bright. For comparison, the default white color is only `0x0c0c0c`.
 
-## Permissions
+# Permissions
 
 Make sure anything that includes this package runs with root access or you'll get permission denied (root access on the Raspberry Pi is needed for driving the LEDs).
 
-## Dev
-
-### Running tests
+# Running tests
 
 ```bash
 # this will ask you for your password in order to use sudo
 npm test [test-index]
 ```
 
-If no test-index is given then all the tests will run. This may take several minutes, must run with a LED display attached, and must be inspected one-by-one manually.
+If no test-index is given, all the tests will run. This takes several minutes, must run with a LED display attached in order for anything to happen, and must be inspected manually.

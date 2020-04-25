@@ -1,5 +1,5 @@
 import {LedColor} from './color';
-import {padMatrix, chopMatrix, appendMatrices, MatrixPaddingOption, createMatrix} from './matrix';
+import {padMatrix, chopMatrix, appendMatrices, MatrixPaddingOption, createMatrix, getPadDifference} from './matrix';
 import {init, drawFrame} from './draw';
 import {overrideDefinedProperties} from './util/object';
 import {EventEmitter} from 'events';
@@ -39,6 +39,11 @@ export type DrawScrollOptions = Partial<{
      * default is false
      */
     emptyFrameBetweenLoops: boolean;
+    /**
+     * chooses the direction of scrolling, to the left or to the right
+     * default is 'left'
+     */
+    scrollDirection: 'left' | 'right';
 }>;
 
 const defaultScrollOptions: Required<DrawScrollOptions> = {
@@ -48,6 +53,7 @@ const defaultScrollOptions: Required<DrawScrollOptions> = {
     padding: MatrixPaddingOption.LEFT,
     padBackgroundColor: LedColor.BLACK,
     emptyFrameBetweenLoops: false,
+    scrollDirection: 'left',
 };
 
 /**
@@ -104,8 +110,26 @@ export function drawScrollingImage(
     }
 
     if (options.emptyFrameBetweenLoops) {
-        fullMatrix = appendMatrices(fullMatrix, createMatrix(matrix.length, width, options.padBackgroundColor));
+        const {left, right} = getPadDifference(matrix, width, options.padding);
+        switch (options.scrollDirection) {
+            case 'left':
+                fullMatrix = appendMatrices(
+                    // subtract the padding so that we have a MAX of one frame of spacing with the padding included
+                    createMatrix(matrix.length, width - left, options.padBackgroundColor),
+                    fullMatrix,
+                );
+                break;
+            case 'right':
+                fullMatrix = appendMatrices(
+                    fullMatrix,
+                    createMatrix(matrix.length, width - right, options.padBackgroundColor),
+                );
+                break;
+        }
     }
+
+    const startingIndex = options.scrollDirection === 'left' ? 0 : fullMatrix[0].length - 1;
+    const increment = options.scrollDirection === 'left' ? 1 : -1;
 
     let keepScrolling = true;
     emitter.on('stop', () => {
@@ -125,17 +149,20 @@ export function drawScrollingImage(
                 ),
             );
             // still within current loop
-            if (pixelIndex < fullMatrix[0].length) {
+            if (
+                (pixelIndex < fullMatrix[0].length && options.scrollDirection === 'left') ||
+                (pixelIndex >= 0 && options.scrollDirection === 'right')
+            ) {
                 // pause on the first frame of the first loop
-                if (pixelIndex === 0 && currentScrollLoop === 0) {
+                if (pixelIndex === startingIndex && currentScrollLoop === 0) {
                     setTimeout(() => {
-                        innerDrawScrollingString(pixelIndex + 1, currentScrollLoop);
+                        innerDrawScrollingString(pixelIndex + increment, currentScrollLoop);
                     }, options.loopDelayMs);
                 }
                 // don't pause on any other frames
                 else {
                     setTimeout(() => {
-                        innerDrawScrollingString(pixelIndex + 1, currentScrollLoop);
+                        innerDrawScrollingString(pixelIndex + increment, currentScrollLoop);
                     }, options.frameDelayMs);
                 }
             }
@@ -143,7 +170,7 @@ export function drawScrollingImage(
             else {
                 // there shouldn't be another loop
                 // note that options.scrollCount < 0 indicates that it should loop forever
-                if (options.scrollCount >= 0 && currentScrollLoop + 1 >= options.scrollCount) {
+                if (options.scrollCount >= 0 && currentScrollLoop + increment >= options.scrollCount) {
                     keepScrolling = false;
                 }
                 // the next loop should start
@@ -151,7 +178,7 @@ export function drawScrollingImage(
                     emitter.emit('loop', currentScrollLoop);
                 }
                 setTimeout(() => {
-                    innerDrawScrollingString(0, currentScrollLoop + 1);
+                    innerDrawScrollingString(startingIndex, currentScrollLoop + increment);
                 }, options.loopDelayMs);
             }
         } else {
@@ -159,7 +186,7 @@ export function drawScrollingImage(
         }
     }
 
-    innerDrawScrollingString(0, 0);
+    innerDrawScrollingString(startingIndex, 0);
     // the exported value should only be of the public interface
     return (emitter as any) as ScrollEmitter;
 }

@@ -5,9 +5,12 @@
         "forceConsistentCasingInFileNames": true,
         "module": "commonjs",
         "noImplicitReturns": true,
+        "skipLibCheck": true,
+        "isolatedModules": true,
         "outDir": "dist",
         "rootDir": "src",
         "strict": true,
         "target": "es6"
-    }
+    },
+    "include": ["src/ts"]
 }

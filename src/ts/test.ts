@@ -6,7 +6,7 @@ type Test = {run: () => draw.ScrollEmitter | void; label: string; duration?: num
 
 const HEIGHT = 8;
 const WIDTH = 32;
-const BRIGHTNESS = 75;
+const BRIGHTNESS = 100;
 const DEFAULT_DURATION = 5000;
 
 function runScrollRainbowTest(options?: draw.DrawScrollOptions) {
@@ -36,15 +36,15 @@ const tests: Test[] = [
         run: () => {
             let stillGoing = true;
             const colorValues = getEnumTypedValues(draw.LedColor);
-            const giantMatrix = colorValues.reduce(
-                (accum: draw.LedColor[][], color) => {
-                    return draw.matrix.appendMatrices(accum, draw.matrix.createMatrix(HEIGHT, WIDTH, color));
-                },
-                [[], [], [], [], [], [], [], []],
-            );
+            const giantMatrix = colorValues.reduce((accum: draw.LedColor[][], color) => {
+                return draw.matrix.appendMatrices(accum, draw.matrix.createMatrix(HEIGHT, WIDTH, color));
+            }, []);
+
             let backwards = false;
-            function animate(index: number) {
-                draw.drawFrame(draw.matrix.chopMatrix(giantMatrix, index, WIDTH));
+
+            function animate(index: number, delay: number) {
+                const windowedMatrixToDraw = draw.matrix.chopMatrix(giantMatrix, index, WIDTH);
+                draw.drawFrame(windowedMatrixToDraw);
                 if (stillGoing) {
                     setTimeout(() => {
                         let nextIndex = index;
@@ -61,15 +61,15 @@ const tests: Test[] = [
                             nextIndex = 0;
                             backwards = false;
                         }
-                        animate(nextIndex);
-                    }, 0);
+                        animate(nextIndex, delay);
+                    }, delay);
                 } else {
                     (emitter as any).emit('done');
                 }
             }
 
             draw.init(HEIGHT, WIDTH, 50);
-            setTimeout(() => animate(0), 0);
+            animate(0, 0);
 
             const emitter = new EventEmitter() as draw.ScrollEmitter;
             emitter.on('stop' as any, () => {
@@ -308,7 +308,7 @@ const tests: Test[] = [
 
             const emitter = new EventEmitter() as draw.ScrollEmitter;
 
-            function animate() {
+            function animate(delay: number) {
                 draw.drawFrame(colorMatrix);
 
                 if (stillGoing) {
@@ -331,15 +331,15 @@ const tests: Test[] = [
                         );
 
                         colorMatrix = draw.matrix.createMatrix(HEIGHT, WIDTH, colorToDraw);
-                        animate();
-                    }, 0);
+                        animate(delay);
+                    }, delay);
                 } else {
                     (emitter as any).emit('done');
                 }
             }
 
             draw.init(HEIGHT, WIDTH, 50);
-            setTimeout(() => animate(), 0);
+            animate(0);
 
             emitter.on('stop' as any, () => {
                 stillGoing = false;
@@ -365,11 +365,18 @@ const tests: Test[] = [
             );
         },
         label: 'Color brightness comparisons',
+        duration: 15000,
     },
     // 25
     {
-        run: () => runScrollRainbowTest({padding: draw.MatrixPaddingOption.NONE, emptyFrameBetweenLoops: true}),
+        run: () => runScrollRainbowTest({padding: draw.MatrixPaddingOption.LEFT, emptyFrameBetweenLoops: true}),
         label: 'Should have blank frame in between scrolling',
+        duration: 15000,
+    },
+    // 26
+    {
+        run: () => runScrollRainbowTest({padding: draw.MatrixPaddingOption.NONE, scrollDirection: 'right'}),
+        label: 'Should work scrolling right',
         duration: 10000,
     },
 ];
