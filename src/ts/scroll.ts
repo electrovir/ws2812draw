@@ -1,32 +1,53 @@
 import {LedColor} from './color';
-import {padMatrix, chopMatrix, appendMatrices, MatrixPaddingOption} from './matrix';
+import {padMatrix, chopMatrix, appendMatrices, MatrixPaddingOption, createMatrix} from './matrix';
 import {init, drawFrame} from './draw';
 import {overrideDefinedProperties} from './util/object';
 import {EventEmitter} from 'events';
 
 /**
  * Options for scrolling.
- * defaults (copied from defaultScrollOptions):
- *     scrollCount: -1, // -1 means infinite
- *     frameDelayMs: 100,
- *     iterationDelayMs: 0,
- *     padding: MatrixPaddingOption.LEFT,
- *     backgroundColor: LedColor.BLACK,
  */
 export type DrawScrollOptions = Partial<{
+    /**
+     * scroll this number of times before stopping. -1 indicates it should never stop
+     * default is -1
+     */
     scrollCount: number;
+    /**
+     * delay in milliseconds between each pixel increment of the scroll
+     * default is 100
+     */
     frameDelayMs: number;
-    iterationDelayMs: number;
+    /**
+     * delay in milliseconds between each full loop
+     * defaults to 0
+     */
+    loopDelayMs: number;
+    /**
+     * options for padding the given image
+     * default is MatrixPaddingOption.LEFT
+     */
     padding: MatrixPaddingOption;
+    /**
+     * color for the padding created by the the padding or the emptyFrameBetweenLoops properties
+     * default is LedColor.BLACK
+     */
     padBackgroundColor: LedColor;
+    /**
+     * causes each loop to end with padding the width of the whole LED matrix
+     * useful for looping text so that the loop position is obvious
+     * default is false
+     */
+    emptyFrameBetweenLoops: boolean;
 }>;
 
 const defaultScrollOptions: Required<DrawScrollOptions> = {
     scrollCount: -1, // -1 means infinite
     frameDelayMs: 100,
-    iterationDelayMs: 0,
+    loopDelayMs: 0,
     padding: MatrixPaddingOption.LEFT,
     padBackgroundColor: LedColor.BLACK,
+    emptyFrameBetweenLoops: false,
 };
 
 /**
@@ -57,20 +78,20 @@ interface InternalScrollingEventEmitter extends EventEmitter {
 /**
  * Scrolls an image (color matrix) horizontally leftwards across the LED display
  *
- * @param matrix             color matrix to scroll
- * @param width              width of the LED display
- * @param brightness         set the LED brightness
- * @param scrollOptions      options for scrolling, see DrawScrollOptions type for available options
+ * @param matrix                     color matrix to scroll
+ * @param width                      width of the LED display
+ * @param brightness                 set the LED brightness
+ * @param rawInputScrollOptions      options for scrolling, see DrawScrollOptions type for available options
  */
 export function drawScrollingImage(
     width: number,
     brightness: number,
     matrix: LedColor[][],
-    scrollOptions: DrawScrollOptions = {},
+    rawInputScrollOptions: DrawScrollOptions = {},
 ): ScrollEmitter {
     const emitter = new EventEmitter() as InternalScrollingEventEmitter;
 
-    const options: Required<DrawScrollOptions> = overrideDefinedProperties(defaultScrollOptions, scrollOptions);
+    const options: Required<DrawScrollOptions> = overrideDefinedProperties(defaultScrollOptions, rawInputScrollOptions);
     let fullMatrix = matrix;
 
     if (options.padding === MatrixPaddingOption.NONE) {
@@ -80,6 +101,10 @@ export function drawScrollingImage(
         }
     } else {
         fullMatrix = padMatrix(matrix, width, options.padBackgroundColor, options.padding);
+    }
+
+    if (options.emptyFrameBetweenLoops) {
+        fullMatrix = appendMatrices(fullMatrix, createMatrix(matrix.length, width, options.padBackgroundColor));
     }
 
     let keepScrolling = true;
@@ -101,9 +126,18 @@ export function drawScrollingImage(
             );
             // still within current loop
             if (pixelIndex < fullMatrix[0].length) {
-                setTimeout(() => {
-                    innerDrawScrollingString(pixelIndex + 1, currentScrollLoop);
-                }, options.frameDelayMs);
+                // pause on the first frame of the first loop
+                if (pixelIndex === 0 && currentScrollLoop === 0) {
+                    setTimeout(() => {
+                        innerDrawScrollingString(pixelIndex + 1, currentScrollLoop);
+                    }, options.loopDelayMs);
+                }
+                // don't pause on any other frames
+                else {
+                    setTimeout(() => {
+                        innerDrawScrollingString(pixelIndex + 1, currentScrollLoop);
+                    }, options.frameDelayMs);
+                }
             }
             // current loop is over
             else {
@@ -118,7 +152,7 @@ export function drawScrollingImage(
                 }
                 setTimeout(() => {
                     innerDrawScrollingString(0, currentScrollLoop + 1);
-                }, options.iterationDelayMs);
+                }, options.loopDelayMs);
             }
         } else {
             emitter.emit('done');

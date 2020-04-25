@@ -18,7 +18,7 @@ if (!module.parent) {
         scrollCount: count == undefined || isNaN(count) ? -1 : count,
         foregroundColor: color,
         frameDelayMs: frameDelay,
-        iterationDelayMs: iterationDelay,
+        loopDelayMs: iterationDelay,
     };
     console.log(`Printing "${inputString}" with options "${JSON.stringify(options, null, 4)}"`);
     // drawString(inputString, color, Number(inputBrightness));

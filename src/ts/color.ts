@@ -13,12 +13,11 @@ export enum LedColor {
     ORANGE /*        */ = 0x0000082d,
     YELLOW /*        */ = 0x00001719,
     GREEN /*         */ = 0x00001c00,
-    TURQUOISE /*     */ = 0x00052000,
+    TURQUOISE /*     */ = 0x00041e00,
     CYAN /*          */ = 0x00121200,
     BLUE /*          */ = 0x00200000,
     VIOLET /*        */ = 0x001a0009,
-    MAGENTA /*       */ = 0x00170017,
-    PINK /*          */ = 0x00080017,
+    MAGENTA /*       */ = 0x00080017,
     WHITE /*         */ = 0x000c0c0c,
 }
 

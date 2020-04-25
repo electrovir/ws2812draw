@@ -20,8 +20,16 @@ function runScrollRainbowTest(options?: draw.DrawScrollOptions) {
 const tests: Test[] = [
     // 0
     {
-        run: () => draw.drawStill(BRIGHTNESS, draw.matrix.createMatrix(HEIGHT, WIDTH, draw.LedColor.CYAN)),
-        label: 'Should draw light blue on whole display',
+        run: () => {
+            draw.drawStill(BRIGHTNESS, draw.matrix.createMatrix(HEIGHT, WIDTH, draw.LedColor.CYAN));
+            setTimeout(() => {
+                draw.drawStill(BRIGHTNESS, draw.matrix.createMatrix(HEIGHT, WIDTH, draw.LedColor.RED));
+            }, DEFAULT_DURATION / 3);
+            setTimeout(() => {
+                draw.drawStill(BRIGHTNESS, draw.matrix.createMatrix(HEIGHT, WIDTH, draw.LedColor.GREEN));
+            }, (DEFAULT_DURATION * 2) / 3);
+        },
+        label: 'Should draw multiple full colors on whole display',
     },
     // 1
     {
@@ -122,7 +130,7 @@ const tests: Test[] = [
         run: () =>
             runScrollRainbowTest({
                 padding: draw.MatrixPaddingOption.NONE,
-                iterationDelayMs: 1000,
+                loopDelayMs: 1000,
             }),
         label: 'Should scroll unpadded rainbow and pause on iterations',
         duration: 20000,
@@ -206,7 +214,7 @@ const tests: Test[] = [
                 'Hellow!',
                 {
                     backgroundColor: draw.LedColor.YELLOW,
-                    foregroundColor: draw.LedColor.PINK,
+                    foregroundColor: draw.LedColor.MAGENTA,
                 },
                 {},
             );
@@ -357,6 +365,12 @@ const tests: Test[] = [
             );
         },
         label: 'Color brightness comparisons',
+    },
+    // 25
+    {
+        run: () => runScrollRainbowTest({padding: draw.MatrixPaddingOption.NONE, emptyFrameBetweenLoops: true}),
+        label: 'Should have blank frame in between scrolling',
+        duration: 10000,
     },
 ];
 

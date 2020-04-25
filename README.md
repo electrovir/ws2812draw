@@ -84,7 +84,7 @@ cosnt emitter = drawScrollingImage(
     {
         scrollCount: -1, // -1 means infinite
         frameDelayMs: 17,
-        iterationDelayMs: 100,
+        loopDelayMs: 100,
         padding: MatrixPaddingOption.LEFT,
         padBackgroundColor: LedColor.BLACK,
     },
@@ -255,7 +255,7 @@ Make sure anything that includes this package runs with root access or you'll ge
 ### Running tests
 
 ```bash
-sudo su
+# this will ask you for your password in order to use sudo
 npm test [test-index]
 ```
 

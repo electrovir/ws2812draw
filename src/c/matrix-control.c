@@ -80,6 +80,11 @@ void ledCleanUp() {
 }
 
 bool drawStill(uint32_t height, uint32_t width, uint8_t brightness, ws2811_led_t* colors) {
+    if (initialized) {
+        // start with a clean slate in case any of the init settings change
+        ledCleanUp();
+    }
+    
     bool initSuccess = ledInit(height, width, brightness);
     if (!initSuccess) {
         return false;

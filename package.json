@@ -1,6 +1,6 @@
 {
     "name": "ws2812draw",
-    "version": "2.1.1",
+    "version": "2.2.0",
     "description": "Drawing to a ws2812 LED matrix",
     "repository": {
         "type": "git",
@@ -20,8 +20,7 @@
         "example": "func() { node dist/ts/example.js \"$@\"; }; func",
         "format": "prettier --write **/*.ts **/*.json",
         "prepublishOnly": "npm run tsc",
-        "test": "node dist/ts/test.js",
-        "test-compile": "npm run compile && npm run test",
+        "test": "sudo -E env \"PATH=$PATH\" ts-node src/ts/test.ts",
         "test-letters": "func() { npm run tsc && node dist/ts/test-text.js \"$@\"; }; func",
         "test:color": "ts-node src/ts/test-color.ts",
         "tsc": "rm -rf dist && tsc"
