@@ -26,14 +26,14 @@ See [`index.ts`](https://github.com/electrovir/ws2812draw/blob/master/src/ts/ind
 Pass in a 2D array of colors to `drawStill`. This function has _relatively_ poor performance if drawing many frames in succession. Meaning, I get ~60fps on a 8x32 LED matrix. However, it is extremeley easy to use for a still image that doesn't change a lot.
 
 ```typescript
-drawStill(brightness: number, imageArray: number[][]): boolean;
+drawStill(brightness: number, imageArray: number[][]);
 ```
 
 Example:
 
 ```typescript
 import {drawStill, LedColor} from 'ws2812draw';
-const success = drawStill(50, [
+drawStill(50, [
     [LedColor.BLACK, LedColor.RED, LedColor.ORANGE],
     [LedColor.BLACK, LedColor.RED, LedColor.ORANGE],
 ]);
@@ -103,7 +103,7 @@ function drawText(
     input: string,
     options?: LetterOptions | LetterOptions[],
     alignmentOptions?: AlignmentOptions,
-): boolean;
+);
 ```
 
 Example:
@@ -143,7 +143,7 @@ getSupportedLetters();
 To register your own custom characters along with a matrix mask for that character, use the following function. The matrix mask must be 8 elements in height and from 2 to 6 (inclusive) elements wide.
 
 ```typescript
-function registerCustomLetter(letter: string, matrix: LetterMatrix): void;
+function registerCustomLetter(letter: string, matrix: LetterMatrix);
 ```
 
 Example:
@@ -175,7 +175,7 @@ function drawScrollingText(
     input: string,
     letterOptions?: LetterOptions | LetterOptions[],
     scrollOptions?: DrawScrollOptions,
-): Promise<void>;
+): ScrollEmitter;
 ```
 
 Example:
