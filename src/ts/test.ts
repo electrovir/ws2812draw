@@ -369,11 +369,41 @@ const tests: Test[] = [
     },
     // 25
     {
-        run: () => runScrollRainbowTest({padding: draw.MatrixPaddingOption.LEFT, emptyFrameBetweenLoops: true}),
+        run: () =>
+            runScrollRainbowTest({
+                padding: draw.MatrixPaddingOption.LEFT,
+                emptyFrameBetweenLoops: true,
+                loopDelayMs: 1000,
+            }),
         label: 'Should have blank frame in between scrolling',
-        duration: 15000,
+        duration: 10000,
     },
     // 26
+    {
+        run: () =>
+            runScrollRainbowTest({
+                padding: draw.MatrixPaddingOption.LEFT,
+                emptyFrameBetweenLoops: true,
+                scrollDirection: 'right',
+                loopDelayMs: 1000,
+            }),
+        label: 'Should have blank frame when scrolling RIGHT',
+        duration: 10000,
+    },
+    // 27
+    {
+        run: () =>
+            runScrollRainbowTest({
+                padding: draw.MatrixPaddingOption.LEFT,
+                emptyFrameBetweenLoops: true,
+                scrollDirection: 'right',
+                loopDelayMs: 1000,
+                scrollCount: 2,
+            }),
+        label: 'Should have blank frame when scrolling RIGHT and only scroll TWICE',
+        duration: 25000,
+    },
+    // 28
     {
         run: () => runScrollRainbowTest({padding: draw.MatrixPaddingOption.NONE, scrollDirection: 'right'}),
         label: 'Should work scrolling right',

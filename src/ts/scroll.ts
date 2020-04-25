@@ -111,24 +111,13 @@ export function drawScrollingImage(
 
     if (options.emptyFrameBetweenLoops) {
         const {left, right} = getPadDifference(matrix, width, options.padding);
-        switch (options.scrollDirection) {
-            case 'left':
-                fullMatrix = appendMatrices(
-                    // subtract the padding so that we have a MAX of one frame of spacing with the padding included
-                    createMatrix(matrix.length, width - left, options.padBackgroundColor),
-                    fullMatrix,
-                );
-                break;
-            case 'right':
-                fullMatrix = appendMatrices(
-                    fullMatrix,
-                    createMatrix(matrix.length, width - right, options.padBackgroundColor),
-                );
-                break;
-        }
+        fullMatrix = appendMatrices(
+            fullMatrix,
+            createMatrix(matrix.length, width - (right + left), options.padBackgroundColor),
+        );
     }
 
-    const startingIndex = options.scrollDirection === 'left' ? 0 : fullMatrix[0].length - 1;
+    const startingIndex = options.scrollDirection === 'left' ? 0 : fullMatrix[0].length;
     const increment = options.scrollDirection === 'left' ? 1 : -1;
 
     let keepScrolling = true;
@@ -144,14 +133,14 @@ export function drawScrollingImage(
                 chopMatrix(
                     // append the matrix to itself to make sure it never clips
                     appendMatrices(fullMatrix, fullMatrix),
-                    pixelIndex,
+                    pixelIndex === startingIndex ? 0 : pixelIndex,
                     width,
                 ),
             );
             // still within current loop
             if (
                 (pixelIndex < fullMatrix[0].length && options.scrollDirection === 'left') ||
-                (pixelIndex >= 0 && options.scrollDirection === 'right')
+                (pixelIndex > 0 && options.scrollDirection === 'right')
             ) {
                 // pause on the first frame of the first loop
                 if (pixelIndex === startingIndex && currentScrollLoop === 0) {
@@ -170,7 +159,7 @@ export function drawScrollingImage(
             else {
                 // there shouldn't be another loop
                 // note that options.scrollCount < 0 indicates that it should loop forever
-                if (options.scrollCount >= 0 && currentScrollLoop + increment >= options.scrollCount) {
+                if (options.scrollCount >= 0 && currentScrollLoop + 1 >= options.scrollCount) {
                     keepScrolling = false;
                 }
                 // the next loop should start
@@ -178,7 +167,7 @@ export function drawScrollingImage(
                     emitter.emit('loop', currentScrollLoop);
                 }
                 setTimeout(() => {
-                    innerDrawScrollingString(startingIndex, currentScrollLoop + increment);
+                    innerDrawScrollingString(startingIndex, currentScrollLoop + 1);
                 }, options.loopDelayMs);
             }
         } else {
