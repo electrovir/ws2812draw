@@ -94,6 +94,12 @@ export function getPadDifference<T>(
 ): {left: number; right: number} {
     assertConsistentMatrixSize(matrix);
     const difference = width - matrix[0].length;
+    if (difference < 0) {
+        return {
+            left: 0,
+            right: 0,
+        };
+    }
     switch (paddingStyle) {
         case MatrixPaddingOption.LEFT:
             return {

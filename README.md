@@ -82,7 +82,7 @@ cosnt emitter = drawScrollingImage(
         [LedColor.BLACK, LedColor.RED, LedColor.ORANGE],
     ],
     {
-        scrollCount: -1, // -1 means infinite
+        loopCount: -1, // -1 means infinite
         frameDelayMs: 100,
         loopDelayMs: 0,
         padding: MatrixPaddingOption.LEFT,

@@ -15,7 +15,7 @@ if (!module.parent) {
     const color = (LedColor[inputColor as any] as any) as LedColor;
     console.log(count);
     const options = {
-        scrollCount: count == undefined || isNaN(count) ? -1 : count,
+        loopCount: count == undefined || isNaN(count) ? -1 : count,
         foregroundColor: color,
         frameDelayMs: frameDelay,
         loopDelayMs: iterationDelay,

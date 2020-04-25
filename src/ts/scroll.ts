@@ -12,7 +12,7 @@ export type DrawScrollOptions = Partial<{
      * scroll this number of times before stopping. -1 indicates it should never stop
      * default is -1
      */
-    scrollCount: number;
+    loopCount: number;
     /**
      * delay in milliseconds between each pixel increment of the scroll
      * default is 100
@@ -44,16 +44,22 @@ export type DrawScrollOptions = Partial<{
      * default is 'left'
      */
     scrollDirection: 'left' | 'right';
+    /**
+     * determines whether the scrolling image should be drawn again after the last loop is finished
+     * default is true
+     */
+    drawAfterLastScroll: boolean;
 }>;
 
 const defaultScrollOptions: Required<DrawScrollOptions> = {
-    scrollCount: -1, // -1 means infinite
+    loopCount: -1, // -1 means infinite
     frameDelayMs: 100,
     loopDelayMs: 0,
     padding: MatrixPaddingOption.LEFT,
     padBackgroundColor: LedColor.BLACK,
     emptyFrameBetweenLoops: false,
     scrollDirection: 'left',
+    drawAfterLastScroll: true,
 };
 
 /**
@@ -98,6 +104,9 @@ export function drawScrollingImage(
     const emitter = new EventEmitter() as InternalScrollingEventEmitter;
 
     const options: Required<DrawScrollOptions> = overrideDefinedProperties(defaultScrollOptions, rawInputScrollOptions);
+    function isLastLoop(loopCount: number) {
+        return loopCount + 1 >= options.loopCount;
+    }
     let fullMatrix = matrix;
 
     if (options.padding === MatrixPaddingOption.NONE) {
@@ -129,10 +138,16 @@ export function drawScrollingImage(
 
     function innerDrawScrollingString(pixelIndex: number, currentScrollLoop: number) {
         if (keepScrolling) {
+            const matrixToChop = appendMatrices(
+                fullMatrix,
+                !options.drawAfterLastScroll && isLastLoop(currentScrollLoop)
+                    ? createMatrix(fullMatrix.length, fullMatrix[0].length, options.padBackgroundColor)
+                    : fullMatrix,
+            );
             drawFrame(
                 chopMatrix(
                     // append the matrix to itself to make sure it never clips
-                    appendMatrices(fullMatrix, fullMatrix),
+                    matrixToChop,
                     pixelIndex === startingIndex ? 0 : pixelIndex,
                     width,
                 ),
@@ -158,17 +173,20 @@ export function drawScrollingImage(
             // current loop is over
             else {
                 // there shouldn't be another loop
-                // note that options.scrollCount < 0 indicates that it should loop forever
-                if (options.scrollCount >= 0 && currentScrollLoop + 1 >= options.scrollCount) {
+                // note that options.loopCount < 0 indicates that it should loop forever
+                if (options.loopCount >= 0 && isLastLoop(currentScrollLoop)) {
                     keepScrolling = false;
                 }
                 // the next loop should start
                 else {
                     emitter.emit('loop', currentScrollLoop);
                 }
-                setTimeout(() => {
-                    innerDrawScrollingString(startingIndex, currentScrollLoop + 1);
-                }, options.loopDelayMs);
+                setTimeout(
+                    () => {
+                        innerDrawScrollingString(startingIndex, currentScrollLoop + 1);
+                    },
+                    !options.drawAfterLastScroll && isLastLoop(currentScrollLoop) ? 0 : options.loopDelayMs,
+                );
             }
         } else {
             emitter.emit('done');

@@ -94,25 +94,25 @@ const tests: Test[] = [
     },
     // 4
     {
-        run: () => runScrollRainbowTest({padding: draw.MatrixPaddingOption.RIGHT, scrollCount: 1}),
+        run: () => runScrollRainbowTest({padding: draw.MatrixPaddingOption.RIGHT, loopCount: 1}),
         label: 'Should scroll RIGHT padded rainbow once',
         duration: 10000,
     },
     // 5
     {
-        run: () => runScrollRainbowTest({padding: draw.MatrixPaddingOption.BOTH, scrollCount: 1}),
+        run: () => runScrollRainbowTest({padding: draw.MatrixPaddingOption.BOTH, loopCount: 1}),
         label: 'Should scroll BOTH padded rainbow once',
         duration: 10000,
     },
     // 6
     {
-        run: () => runScrollRainbowTest({padding: draw.MatrixPaddingOption.LEFT, scrollCount: 1}),
+        run: () => runScrollRainbowTest({padding: draw.MatrixPaddingOption.LEFT, loopCount: 1}),
         label: 'Should scroll LEFT padded rainbow once',
         duration: 10000,
     },
     // 7
     {
-        run: () => runScrollRainbowTest({padding: draw.MatrixPaddingOption.LEFT, scrollCount: 3}),
+        run: () => runScrollRainbowTest({padding: draw.MatrixPaddingOption.LEFT, loopCount: 3}),
         label: 'Should scroll LEFT padded rainbow THRICE',
         duration: 15000,
     },
@@ -232,7 +232,7 @@ const tests: Test[] = [
                 {
                     foregroundColor: draw.LedColor.RED,
                 },
-                {scrollCount: 1},
+                {loopCount: 1},
             );
         },
         label: 'Should scroll text only once',
@@ -398,7 +398,7 @@ const tests: Test[] = [
                 emptyFrameBetweenLoops: true,
                 scrollDirection: 'right',
                 loopDelayMs: 1000,
-                scrollCount: 2,
+                loopCount: 2,
             }),
         label: 'Should have blank frame when scrolling RIGHT and only scroll TWICE',
         duration: 20000,
@@ -421,13 +421,13 @@ const tests: Test[] = [
                     emptyFrameBetweenLoops: true,
                     loopDelayMs: 2000,
                     padding: draw.MatrixPaddingOption.LEFT,
-                    scrollCount: 2,
+                    loopCount: 2,
                 },
             ),
         label: 'Should draw scrolling, padded, short text normally',
         duration: 10000,
     },
-    // 29
+    // 30
     {
         run: () =>
             draw.drawText(
@@ -438,6 +438,35 @@ const tests: Test[] = [
             ),
         label: 'Should draw short, padded text normally',
         duration: 10000,
+    },
+    // 31
+    {
+        run: () => {
+            const emitter = draw.drawScrollingText(
+                WIDTH,
+                BRIGHTNESS,
+                'this no fit on screen',
+                {foregroundColor: draw.LedColor.CYAN},
+                {
+                    emptyFrameBetweenLoops: true,
+                    loopDelayMs: 2000,
+                    frameDelayMs: 16,
+                    padding: draw.MatrixPaddingOption.LEFT,
+                    loopCount: 2,
+                    drawAfterLastScroll: false,
+                },
+            );
+            emitter.on('done', () => {
+                draw.drawText(
+                    BRIGHTNESS,
+                    'done',
+                    {foregroundColor: draw.LedColor.RED},
+                    {width: WIDTH, padding: draw.MatrixPaddingOption.BOTH},
+                );
+            });
+        },
+        label: 'Should scroll long text without absurdly long padding and should not draw after last loop',
+        duration: 20000,
     },
 ];
 
