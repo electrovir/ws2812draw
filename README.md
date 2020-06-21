@@ -2,11 +2,21 @@
 
 Draw to a ws2812 LED matrix ([like this one](https://www.amazon.com/dp/B01DC0IPVU)) with a Raspberry Pi. Uses the C library [rpi_ws281x](https://github.com/jgarff/rpi_ws281x).
 
+All testing has been done on a [Raspberry Pi 3 B+](https://www.raspberrypi.org/products/raspberry-pi-3-model-b-plus/).
+
 # Install
 
 ```
 npm install ws2812draw
 ```
+
+# Hardware Setup
+
+On a fresh install of Raspian Pi OS on a Raspberry Pi, no software setup beyond `npm install` is required.
+
+Hardware wise, this uses [Pin 12 aka BCM 18](https://pinout.xyz/pinout/pin12_gpio18) for the LED matrix's data line.  Further explanations for which GPIO pins _can_ be used at the C library level are contained in the [rpi_ws281x library's README](https://github.com/jgarff/rpi_ws281x#gpio-usage). However, this package currently doesn't interface with that since I found it works easiest to just leave it on the default (`BCM 18`).
+
+I found that my 32x8 LED matrix can be fully driven at _very high brightness_ by the Raspberry Pi's 5v power pin, no power supply needed besides the Pi's.
 
 # Example
 
