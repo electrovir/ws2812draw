@@ -5,5 +5,5 @@ const addon = bindings('addon');
 export {}
 
 console.log(addon.hello());
-console.log(addon.timestamp());
+console.log(addon.test());
 // Prints: 'world'
