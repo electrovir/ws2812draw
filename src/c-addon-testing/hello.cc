@@ -1,6 +1,6 @@
 // hello.cc using Node-API
 #include <node_api.h>
-#include "ws2811.h"
+#include "matrix-control.h"
 
 namespace demo {
 
@@ -17,7 +17,7 @@ napi_value TimeStampMethod(napi_env env, napi_callback_info args) {
   napi_value timestamp;
   napi_status status;
   
-  const uint64_t current_timestamp = get_microsecond_timestamp();
+  const uint64_t current_timestamp = ledInit(8, 32, 255);
 
   status = napi_create_int64(env, current_timestamp, &timestamp);
   if (status != napi_ok) return nullptr;

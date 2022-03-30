@@ -33,7 +33,7 @@
         "example": "node dist/ts/example.js",
         "format": "prettier --write **/*.ts **/*.json",
         "prepare": "npm run compile",
-        "test-addon": "npx node-gyp configure && npx node-gyp build && npx ts-node src/ts/index.ts",
+        "test-addon": "node-gyp configure && node-gyp build && tsc && sudo -E env \"PATH=$PATH\" node dist/ts/index.js",
         "test": "sudo -E env \"PATH=$PATH\" ts-node --transpile-only src/ts/test.ts",
         "test-letters": "func() { npm run tsc && node dist/ts/test-text.js \"$@\"; }; func",
         "test:color": "ts-node --transpile-only src/ts/test-color.ts",
