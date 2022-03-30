@@ -484,7 +484,7 @@ async function runTest(test: Test) {
     countDown(duration);
     const emitter = test.run();
     return await Promise.all([
-        new Promise(resolve => {
+        new Promise<void>(resolve => {
             if (emitter) {
                 emitter.on('done', () => {
                     resolve();
@@ -493,7 +493,7 @@ async function runTest(test: Test) {
                 resolve();
             }
         }),
-        new Promise(resolve => {
+        new Promise<void>(resolve => {
             setTimeout(() => {
                 if (emitter) {
                     emitter.emit('stop');

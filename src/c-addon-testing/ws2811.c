@@ -42,12 +42,12 @@
 #include <linux/spi/spidev.h>
 #include <time.h>
 #include <math.h>
-#include "mailbox.h"
 #include "clk.h"
-#include "gpio.h"
 #include "dma.h"
-#include "pwm.h"
+#include "gpio.h"
+#include "mailbox.h"
 #include "pcm.h"
+#include "pwm.h"
 #include "rpihw.h"
 
 #include "ws2811.h"
@@ -120,7 +120,7 @@ typedef struct ws2811_device
  *
  * @returns  Current timestamp in microseconds or 0 on error.
  */
-static uint64_t get_microsecond_timestamp()
+uint64_t get_microsecond_timestamp()
 {
     struct timespec t;
 
@@ -1135,7 +1135,7 @@ ws2811_return_t ws2811_wait(ws2811_t *ws2811)
  *
  * @returns  None
  */
-ws2811_return_t  ws2811_render(ws2811_t *ws2811)
+ws2811_return_t ws2811_render(ws2811_t *ws2811)
 {
     volatile uint8_t *pxl_raw = ws2811->device->pxl_raw;
     int driver_mode = ws2811->device->driver_mode;
