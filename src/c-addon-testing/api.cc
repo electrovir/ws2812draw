@@ -76,9 +76,37 @@ namespace ws2812drawCApi
         return matrixInitReturnValue;
     }
 
-    // ws2811_led_t *convertToColorArray()
-    // {
-    // }
+    ws2811_led_t *convertToColorArray(napi_env env, uint32_t colorsArrayLength, napi_value colorsInputArray)
+    {
+        napi_status status;
+        ws2811_led_t *colors;
+        colors = (ws2811_led_t *)malloc(sizeof(ws2811_led_t) * colorsArrayLength);
+        for (uint32_t index = 0; index < colorsArrayLength; index++)
+        {
+            napi_value inputArrayElementValue;
+            status = napi_get_element(env, colorsInputArray, index, &inputArrayElementValue);
+            if (status != napi_ok)
+            {
+                char errorMessage[1024];
+                snprintf(errorMessage, 1024, "Failed to get colors array element at index %d", index);
+                napi_throw_error(env, NULL, errorMessage);
+                return nullptr;
+            }
+
+            uint32_t elementColor;
+            status = napi_get_value_uint32(env, inputArrayElementValue, &elementColor);
+            if (status != napi_ok)
+            {
+                char errorMessage[1024];
+                snprintf(errorMessage, 1024, "Failed to convert colors array element at index %d into uint32.", index);
+                napi_throw_error(env, NULL, errorMessage);
+                return nullptr;
+            }
+            colors[index] = (ws2811_led_t)elementColor;
+        }
+
+        return colors;
+    }
 
     napi_value drawStillCallback(napi_env env, napi_callback_info info)
     {
@@ -121,7 +149,6 @@ namespace ws2812drawCApi
         uint8_t brightness = (uint8_t)brightness32;
 
         // help with arrays: https://github.com/nodejs/help/issues/1154#issuecomment-372632449
-        uint32_t index;
         uint32_t colorsArrayLength;
         status = napi_get_array_length(env, argv[3], &colorsArrayLength);
         if (status != napi_ok)
@@ -135,31 +162,7 @@ namespace ws2812drawCApi
             napi_throw_error(env, NULL, "Colors array (fourth argument) should have a length equal to height * width.");
             return nullptr;
         }
-        ws2811_led_t *colors;
-        colors = (ws2811_led_t *)malloc(sizeof(ws2811_led_t) * colorsArrayLength);
-        for (index = 0; index < colorsArrayLength; index++)
-        {
-            napi_value inputArrayElementValue;
-            status = napi_get_element(env, argv[3], index, &inputArrayElementValue);
-            if (status != napi_ok)
-            {
-                char errorMessage[1024];
-                snprintf(errorMessage, 1024, "Failed to get colors array element at index %d", index);
-                napi_throw_error(env, NULL, errorMessage);
-                return nullptr;
-            }
-
-            uint32_t elementColor;
-            status = napi_get_value_uint32(env, inputArrayElementValue, &elementColor);
-            if (status != napi_ok)
-            {
-                char errorMessage[1024];
-                snprintf(errorMessage, 1024, "Failed to convert colors array element at index %d into uint32.", index);
-                napi_throw_error(env, NULL, errorMessage);
-                return nullptr;
-            }
-            colors[index] = (ws2811_led_t)elementColor;
-        }
+        ws2811_led_t *colors = convertToColorArray(env, colorsArrayLength, argv[3]);
 
         const bool drawStillResult = drawStill(height, width, brightness, colors);
 

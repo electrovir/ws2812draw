@@ -14,6 +14,6 @@ export {};
 
 // console.log(nodeApi.hello());
 console.log(cApi.initMatrix(32, 8, 255));
-console.log(cApi.drawStill(32, 8, 100, createArray(8 * 32, LedColor.BLACK)));
+console.log(cApi.drawStill(32, 8, 30, createArray(8 * 32, LedColor.CYAN)));
 console.log(cApi.cleanUp());
 // Prints: 'world'
