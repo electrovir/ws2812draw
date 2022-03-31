@@ -31,18 +31,19 @@ Napi::String test(const Napi::CallbackInfo &info)
     return Napi::String::New(info.Env(), result);
 }
 
-ws2811_led_t *convertToColors(uint32_t height, uint32_t width, Napi::TypedArray inputArray)
-{
-    ws2811_led_t *colors;
-    colors = (ws2811_led_t *)malloc(sizeof(ws2811_led_t) * height * width);
-    for (uint32_t i = 0; i < height * width; i++)
-    {
-        Napi::Value value = inputArray[i];
-        colors[i] = (ws2811_led_t)value.As<Napi::Number>().Int32Value();
-    }
+// converted
+// ws2811_led_t *convertToColors(uint32_t height, uint32_t width, Napi::TypedArray inputArray)
+// {
+//     ws2811_led_t *colors;
+//     colors = (ws2811_led_t *)malloc(sizeof(ws2811_led_t) * height * width);
+//     for (uint32_t i = 0; i < height * width; i++)
+//     {
+//         Napi::Value value = inputArray[i];
+//         colors[i] = (ws2811_led_t)value.As<Napi::Number>().Int32Value();
+//     }
 
-    return colors;
-}
+//     return colors;
+// }
 
 // converted
 // Napi::Boolean ledDrawStillImage(const Napi::CallbackInfo &info)
