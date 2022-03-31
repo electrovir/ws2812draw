@@ -6,9 +6,6 @@
 
 namespace ws2812drawCApi
 {
-    uint32_t initWidth = 0;
-    uint32_t initHeight = 0;
-
     napi_value cleanUpCallback(napi_env env, napi_callback_info info)
     {
         napi_value ledCleanUpReturnValue;
@@ -22,6 +19,7 @@ namespace ws2812drawCApi
             napi_throw_error(env, NULL, "derp.");
             return nullptr;
         }
+
         return ledCleanUpReturnValue;
     }
 
@@ -88,17 +86,19 @@ namespace ws2812drawCApi
             return nullptr;
         }
 
-        if (initWidth == 0 || initHeight == 0)
-        {
-            napi_throw_error(env, NULL, "Matrix must be initialized before calling drawFrame.");
-            return nullptr;
-        }
+        dimensions_t initDimensions = getInitializedDimensions();
 
-        ws2811_led_t *colors = convertToColorArray(env, initWidth, initHeight, argv[0]);
+        ws2811_led_t *colors = convertToColorArray(env, initDimensions.width, initDimensions.height, argv[0]);
 
         const bool drawFrameResult = ledDrawFrame(colors);
 
         free(colors);
+
+        if (!drawFrameResult)
+        {
+            napi_throw_error(env, NULL, "drawFrame failed: must call initMatrix first.");
+            return nullptr;
+        }
 
         status = napi_get_boolean(env, drawFrameResult, &DrawFrameReturnValue);
         if (status != napi_ok)
@@ -107,6 +107,29 @@ namespace ws2812drawCApi
             return nullptr;
         }
         return DrawFrameReturnValue;
+    }
+
+    dimensions_t getDimensions(napi_env env, napi_value argv[2])
+    {
+        napi_status status;
+        uint32_t width = 0;
+        status = napi_get_value_uint32(env, argv[0], &width);
+        if (status != napi_ok)
+        {
+            napi_throw_error(env, NULL, "Failed to converted first argument (width) into uint32.");
+        }
+
+        uint32_t height = 0;
+        status = napi_get_value_uint32(env, argv[1], &height);
+        if (status != napi_ok)
+        {
+            napi_throw_error(env, NULL, "Failed to convert second argument (height) into uint32.");
+        }
+
+        return {
+            width,
+            height,
+        };
     }
 
     napi_value drawStillCallback(napi_env env, napi_callback_info info)
@@ -123,21 +146,7 @@ namespace ws2812drawCApi
             return nullptr;
         }
 
-        uint32_t width;
-        status = napi_get_value_uint32(env, argv[0], &width);
-        if (status != napi_ok)
-        {
-            napi_throw_error(env, NULL, "Failed to converted first argument (width) into uint32.");
-            return nullptr;
-        }
-
-        uint32_t height;
-        status = napi_get_value_uint32(env, argv[1], &height);
-        if (status != napi_ok)
-        {
-            napi_throw_error(env, NULL, "Failed to convert second argument (height) into uint32.");
-            return nullptr;
-        }
+        dimensions_t dimensions = getDimensions(env, argv);
 
         // node api does not have napi_get_value_uint8 so we start with uint32 and then cast to uint8
         uint32_t brightness32;
@@ -149,9 +158,9 @@ namespace ws2812drawCApi
         }
         uint8_t brightness = (uint8_t)brightness32;
 
-        ws2811_led_t *colors = convertToColorArray(env, width, height, argv[3]);
+        ws2811_led_t *colors = convertToColorArray(env, dimensions.width, dimensions.height, argv[3]);
 
-        const bool drawStillResult = drawStill(height, width, brightness, colors);
+        const bool drawStillResult = drawStill(dimensions.width, dimensions.height, brightness, colors);
 
         free(colors);
 
@@ -188,7 +197,6 @@ namespace ws2812drawCApi
             napi_throw_error(env, NULL, "Failed to converted first argument (width) into uint32.");
             return nullptr;
         }
-        initWidth = width;
 
         uint32_t height;
         status = napi_get_value_uint32(env, argv[1], &height);
@@ -197,7 +205,6 @@ namespace ws2812drawCApi
             napi_throw_error(env, NULL, "Failed to convert second argument (height) into uint32.");
             return nullptr;
         }
-        initHeight = height;
 
         // node api does not have napi_get_value_uint8 so we start with uint32 and then cast to uint8
         uint32_t brightness32;
@@ -209,7 +216,7 @@ namespace ws2812drawCApi
         }
         uint8_t brightness = (uint8_t)brightness32;
 
-        const bool initMatrixResult = ledInit(height, width, brightness);
+        const bool initMatrixResult = ledInit(width, height, brightness);
 
         status = napi_get_boolean(env, initMatrixResult, &matrixInitReturnValue);
         if (status != napi_ok)

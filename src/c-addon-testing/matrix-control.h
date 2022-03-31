@@ -10,10 +10,17 @@ extern "C"
 #include <stdbool.h>
 #include "ws2811.h"
 
+    typedef struct
+    {
+        uint32_t width;
+        uint32_t height;
+    } dimensions_t;
+
     bool drawStill(uint32_t height, uint32_t width, uint8_t brightness, ws2811_led_t *colors);
     bool ledInit(uint32_t passedHeight, uint32_t passedWidth, uint8_t brightness);
     bool ledCleanUp();
     bool ledDrawFrame(ws2811_led_t *colors);
+    dimensions_t getInitializedDimensions();
 
 #ifdef __cplusplus
 }
