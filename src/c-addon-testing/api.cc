@@ -6,6 +6,9 @@
 
 namespace ws2812drawCApi
 {
+    uint32_t initWidth = 0;
+    uint32_t initHeight = 0;
+
     napi_value cleanUpCallback(napi_env env, napi_callback_info info)
     {
         napi_value ledCleanUpReturnValue;
@@ -76,8 +79,8 @@ namespace ws2812drawCApi
         napi_value DrawFrameReturnValue;
         napi_status status;
 
-        size_t argc = 3;
-        napi_value argv[3];
+        size_t argc = 1;
+        napi_value argv[1];
         status = napi_get_cb_info(env, info, &argc, argv, NULL, NULL);
         if (status != napi_ok)
         {
@@ -85,23 +88,13 @@ namespace ws2812drawCApi
             return nullptr;
         }
 
-        uint32_t width;
-        status = napi_get_value_uint32(env, argv[0], &width);
-        if (status != napi_ok)
+        if (initWidth == 0 || initHeight == 0)
         {
-            napi_throw_error(env, NULL, "Failed to converted first argument (width) into uint32.");
+            napi_throw_error(env, NULL, "Matrix must be initialized before calling drawFrame.");
             return nullptr;
         }
 
-        uint32_t height;
-        status = napi_get_value_uint32(env, argv[1], &height);
-        if (status != napi_ok)
-        {
-            napi_throw_error(env, NULL, "Failed to convert second argument (height) into uint32.");
-            return nullptr;
-        }
-
-        ws2811_led_t *colors = convertToColorArray(env, width, height, argv[2]);
+        ws2811_led_t *colors = convertToColorArray(env, initWidth, initHeight, argv[0]);
 
         const bool drawFrameResult = ledDrawFrame(colors);
 
@@ -195,6 +188,7 @@ namespace ws2812drawCApi
             napi_throw_error(env, NULL, "Failed to converted first argument (width) into uint32.");
             return nullptr;
         }
+        initWidth = width;
 
         uint32_t height;
         status = napi_get_value_uint32(env, argv[1], &height);
@@ -203,6 +197,7 @@ namespace ws2812drawCApi
             napi_throw_error(env, NULL, "Failed to convert second argument (height) into uint32.");
             return nullptr;
         }
+        initHeight = height;
 
         // node api does not have napi_get_value_uint8 so we start with uint32 and then cast to uint8
         uint32_t brightness32;
@@ -229,7 +224,7 @@ namespace ws2812drawCApi
     {
         napi_status status;
         napi_value cleanUpFunction;
-        // napi_value drawFrameFunction;
+        napi_value drawFrameFunction;
         napi_value drawStillFunction;
         napi_value initMatrixFunction;
         // napi_value testFunction;
@@ -273,6 +268,20 @@ namespace ws2812drawCApi
         if (status != napi_ok)
         {
             napi_throw_error(env, NULL, "Failed to attach drawStill to exports.");
+            return nullptr;
+        }
+
+        status = napi_create_function(env, nullptr, 0, drawFrameCallback, nullptr, &drawFrameFunction);
+        if (status != napi_ok)
+        {
+            napi_throw_error(env, NULL, "Failed to create function for drawFrameCallback.");
+            return nullptr;
+        }
+
+        status = napi_set_named_property(env, exports, "drawFrame", drawFrameFunction);
+        if (status != napi_ok)
+        {
+            napi_throw_error(env, NULL, "Failed to attach drawFrame to exports.");
             return nullptr;
         }
 
