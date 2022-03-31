@@ -25,11 +25,12 @@ extern "C"
 
 #include "ws2811.h"
 
-Napi::String test(const Napi::CallbackInfo &info)
-{
-    std::string result = " clk: " + std::to_string(CM_CLK_CTL_SRC_TSTDBG0) + " gpio: " + std::to_string(GPIO_OFFSET) + " dma: " + std::to_string(PAGE_SIZE) + " tgbw: " + std::to_string(SK6812_STRIP_RGBW);
-    return Napi::String::New(info.Env(), result);
-}
+// converted
+// Napi::String test(const Napi::CallbackInfo &info)
+// {
+//     std::string result = " clk: " + std::to_string(CM_CLK_CTL_SRC_TSTDBG0) + " gpio: " + std::to_string(GPIO_OFFSET) + " dma: " + std::to_string(PAGE_SIZE) + " tgbw: " + std::to_string(SK6812_STRIP_RGBW);
+//     return Napi::String::New(info.Env(), result);
+// }
 
 // converted
 // ws2811_led_t *convertToColors(uint32_t height, uint32_t width, Napi::TypedArray inputArray)
@@ -74,39 +75,41 @@ Napi::String test(const Napi::CallbackInfo &info)
 //     ledCleanUp();
 // }
 
-Napi::Boolean drawFrame(const Napi::CallbackInfo &info)
-{
-    uint32_t height = (uint32_t)info[0].ToNumber();
-    uint32_t width = (uint32_t)info[1].ToNumber();
-    Napi::TypedArray inputColorMap = info[2].As<Napi::TypedArray>();
-    ws2811_led_t *colors = convertToColors(height, width, inputColorMap);
-    return Napi::Boolean::New(info.Env(), ledDrawFrame(colors));
-}
+// converted
+// Napi::Boolean drawFrame(const Napi::CallbackInfo &info)
+// {
+//     uint32_t height = (uint32_t)info[0].ToNumber();
+//     uint32_t width = (uint32_t)info[1].ToNumber();
+//     Napi::TypedArray inputColorMap = info[2].As<Napi::TypedArray>();
+//     ws2811_led_t *colors = convertToColors(height, width, inputColorMap);
+//     return Napi::Boolean::New(info.Env(), ledDrawFrame(colors));
+// }
 
-Napi::Object Init(Napi::Env env, Napi::Object exports)
-{
+// converted
+// Napi::Object Init(Napi::Env env, Napi::Object exports)
+// {
 
-    exports.Set(
-        Napi::String::New(env, "test"),
-        Napi::Function::New(env, test));
+//     exports.Set(
+//         Napi::String::New(env, "test"),
+//         Napi::Function::New(env, test));
 
-    exports.Set(
-        Napi::String::New(env, "drawStill"),
-        Napi::Function::New(env, ledDrawStillImage));
+//     exports.Set(
+//         Napi::String::New(env, "drawStill"),
+//         Napi::Function::New(env, ledDrawStillImage));
 
-    exports.Set(
-        Napi::String::New(env, "init"),
-        Napi::Function::New(env, initMatrix));
+//     exports.Set(
+//         Napi::String::New(env, "init"),
+//         Napi::Function::New(env, initMatrix));
 
-    exports.Set(
-        Napi::String::New(env, "cleanUp"),
-        Napi::Function::New(env, cleanUp));
+//     exports.Set(
+//         Napi::String::New(env, "cleanUp"),
+//         Napi::Function::New(env, cleanUp));
 
-    exports.Set(
-        Napi::String::New(env, "drawFrame"),
-        Napi::Function::New(env, drawFrame));
+//     exports.Set(
+//         Napi::String::New(env, "drawFrame"),
+//         Napi::Function::New(env, drawFrame));
 
-    return exports;
-}
+//     return exports;
+// }
 
-NODE_API_MODULE(ws2812draw, Init)
+// NODE_API_MODULE(ws2812draw, Init)

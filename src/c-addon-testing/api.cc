@@ -1,11 +1,35 @@
 #include <stdint.h>
 #include <stdlib.h>
 #include <cstdio>
+#include <string>
 #include <node_api.h>
 #include "matrix-control.h"
 
+extern "C"
+{
+#include "pcm.h"
+#include "clk.h"
+#include "gpio.h"
+#include "dma.h"
+#include "pwm.h"
+}
+
 namespace ws2812drawCApi
 {
+
+    bool didFail(napi_env env, napi_status status, const char *failureMessage)
+    {
+        if (status == napi_ok)
+        {
+            return false;
+        }
+        else
+        {
+            napi_throw_error(env, NULL, failureMessage);
+            return true;
+        }
+    }
+
     napi_value cleanUpCallback(napi_env env, napi_callback_info info)
     {
         napi_value ledCleanUpReturnValue;
@@ -14,9 +38,8 @@ namespace ws2812drawCApi
         const bool ledCleanUpResult = ledCleanUp();
 
         status = napi_get_boolean(env, ledCleanUpResult, &ledCleanUpReturnValue);
-        if (status != napi_ok)
+        if (didFail(env, status, "Failed to convert clean up result to boolean."))
         {
-            napi_throw_error(env, NULL, "derp.");
             return nullptr;
         }
 
@@ -29,9 +52,8 @@ namespace ws2812drawCApi
         // node api does not have napi_get_value_uint8 so we start with uint32 and then cast to uint8
         uint32_t brightness32;
         status = napi_get_value_uint32(env, argValue, &brightness32);
-        if (status != napi_ok)
+        if (didFail(env, status, "Failed to convert brightness argument into uint32."))
         {
-            napi_throw_error(env, NULL, "Failed to convert brightness argument into uint32.");
             return 0;
         }
         uint8_t brightness8 = (uint8_t)brightness32;
@@ -45,9 +67,8 @@ namespace ws2812drawCApi
 
         uint32_t colorsArrayLength;
         status = napi_get_array_length(env, colorsInputArray, &colorsArrayLength);
-        if (status != napi_ok)
+        if (didFail(env, status, "Failed to get array length of input colors array."))
         {
-            napi_throw_error(env, NULL, "Failed to get array length of input colors array.");
             return nullptr;
         }
 
@@ -66,9 +87,8 @@ namespace ws2812drawCApi
             status = napi_get_element(env, colorsInputArray, index, &inputArrayElementValue);
             if (status != napi_ok)
             {
-                char errorMessage[1024];
-                snprintf(errorMessage, 1024, "Failed to get colors array element at index %d", index);
-                napi_throw_error(env, NULL, errorMessage);
+                std::string errorMessage = "Failed to get colors array element at index " + std::to_string(index) + ".";
+                napi_throw_error(env, NULL, errorMessage.c_str());
                 return nullptr;
             }
 
@@ -76,9 +96,8 @@ namespace ws2812drawCApi
             status = napi_get_value_uint32(env, inputArrayElementValue, &elementColor);
             if (status != napi_ok)
             {
-                char errorMessage[1024];
-                snprintf(errorMessage, 1024, "Failed to convert colors array element at index %d into uint32.", index);
-                napi_throw_error(env, NULL, errorMessage);
+                std::string errorMessage = "Failed to convert colors array element at index " + std::to_string(index) + " into uint32.";
+                napi_throw_error(env, NULL, errorMessage.c_str());
                 return nullptr;
             }
             colors[index] = (ws2811_led_t)elementColor;
@@ -96,9 +115,8 @@ namespace ws2812drawCApi
         size_t argc = 1;
         napi_value argv[1];
         status = napi_get_cb_info(env, info, &argc, argv, NULL, NULL);
-        if (status != napi_ok)
+        if (didFail(env, status, "Failed to retrieve arguments given to drawFrameCallback."))
         {
-            napi_throw_error(env, NULL, "Failed to retrieve arguments given to drawFrameCallback.");
             return nullptr;
         }
 
@@ -117,9 +135,8 @@ namespace ws2812drawCApi
         }
 
         status = napi_get_boolean(env, drawFrameResult, &DrawFrameReturnValue);
-        if (status != napi_ok)
+        if (didFail(env, status, "Failed to convert drawFrame result into boolean."))
         {
-            napi_throw_error(env, NULL, "Failed to convert drawFrame result into boolean.");
             return nullptr;
         }
         return DrawFrameReturnValue;
@@ -130,16 +147,14 @@ namespace ws2812drawCApi
         napi_status status;
         uint32_t width = 0;
         status = napi_get_value_uint32(env, argv[0], &width);
-        if (status != napi_ok)
+        if (didFail(env, status, "Failed to converted first argument (width) into uint32."))
         {
-            napi_throw_error(env, NULL, "Failed to converted first argument (width) into uint32.");
         }
 
         uint32_t height = 0;
         status = napi_get_value_uint32(env, argv[1], &height);
-        if (status != napi_ok)
+        if (didFail(env, status, "Failed to convert second argument (height) into uint32."))
         {
-            napi_throw_error(env, NULL, "Failed to convert second argument (height) into uint32.");
         }
 
         return {
@@ -156,9 +171,8 @@ namespace ws2812drawCApi
         size_t argc = 4;
         napi_value argv[4];
         status = napi_get_cb_info(env, info, &argc, argv, NULL, NULL);
-        if (status != napi_ok)
+        if (didFail(env, status, "Failed to retrieve arguments given to drawStillCallback."))
         {
-            napi_throw_error(env, NULL, "Failed to retrieve arguments given to drawStillCallback.");
             return nullptr;
         }
 
@@ -173,9 +187,8 @@ namespace ws2812drawCApi
         free(colors);
 
         status = napi_get_boolean(env, drawStillResult, &drawStillReturnValue);
-        if (status != napi_ok)
+        if (didFail(env, status, "Failed to convert drawStill result into boolean."))
         {
-            napi_throw_error(env, NULL, "Failed to convert drawStill result into boolean.");
             return nullptr;
         }
         return drawStillReturnValue;
@@ -192,9 +205,8 @@ namespace ws2812drawCApi
         size_t argc = 3;
         napi_value argv[3];
         status = napi_get_cb_info(env, info, &argc, argv, NULL, NULL);
-        if (status != napi_ok)
+        if (didFail(env, status, "Failed to retrieve arguments given to initMatrixCallback."))
         {
-            napi_throw_error(env, NULL, "Failed to retrieve arguments given to initMatrixCallback.");
             return nullptr;
         }
 
@@ -205,12 +217,27 @@ namespace ws2812drawCApi
         const bool initMatrixResult = ledInit(dimensions, brightness);
 
         status = napi_get_boolean(env, initMatrixResult, &matrixInitReturnValue);
-        if (status != napi_ok)
+        if (didFail(env, status, "Failed to convert ledInit result into boolean."))
         {
-            napi_throw_error(env, NULL, "Failed to convert ledInit result into boolean.");
             return nullptr;
         }
         return matrixInitReturnValue;
+    }
+
+    napi_value testCallback(napi_env env, napi_callback_info info)
+    {
+        napi_value testReturnValue;
+        napi_status status;
+
+        std::string testMessage = " clk: " + std::to_string(CM_CLK_CTL_SRC_TSTDBG0) + " gpio: " + std::to_string(GPIO_OFFSET) + " dma: " + std::to_string(PAGE_SIZE) + " tgbw: " + std::to_string(SK6812_STRIP_RGBW);
+
+        status = napi_create_string_utf8(env, testMessage.c_str(), NAPI_AUTO_LENGTH, &testReturnValue);
+        if (didFail(env, status, "Failed to create string for testCallback."))
+        {
+            return nullptr;
+        }
+
+        return testReturnValue;
     }
 
     napi_value initModuleApi(napi_env env, napi_value exports)
@@ -220,61 +247,65 @@ namespace ws2812drawCApi
         napi_value drawFrameFunction;
         napi_value drawStillFunction;
         napi_value initMatrixFunction;
-        // napi_value testFunction;
+        napi_value testFunction;
 
         status = napi_create_function(env, nullptr, 0, cleanUpCallback, nullptr, &cleanUpFunction);
-        if (status != napi_ok)
+        if (didFail(env, status, "Failed to create function for cleanUpCallback."))
         {
-            napi_throw_error(env, NULL, "Failed to create function for cleanUpCallback.");
             return nullptr;
         }
 
         status = napi_set_named_property(env, exports, "cleanUp", cleanUpFunction);
-        if (status != napi_ok)
+        if (didFail(env, status, "Failed to attach cleanUp to exports."))
         {
-            napi_throw_error(env, NULL, "Failed to attach cleanUp to exports.");
             return nullptr;
         }
 
         status = napi_create_function(env, nullptr, 0, initMatrixCallback, nullptr, &initMatrixFunction);
-        if (status != napi_ok)
+        if (didFail(env, status, "Failed to create function for initMatrixCallback."))
         {
-            napi_throw_error(env, NULL, "Failed to create function for initMatrixCallback.");
             return nullptr;
         }
 
         status = napi_set_named_property(env, exports, "initMatrix", initMatrixFunction);
-        if (status != napi_ok)
+        if (didFail(env, status, "Failed to attach initMatrix to exports."))
         {
-            napi_throw_error(env, NULL, "Failed to attach initMatrix to exports.");
             return nullptr;
         }
 
         status = napi_create_function(env, nullptr, 0, drawStillCallback, nullptr, &drawStillFunction);
-        if (status != napi_ok)
+        if (didFail(env, status, "Failed to create function for drawStillCallback."))
         {
-            napi_throw_error(env, NULL, "Failed to create function for drawStillCallback.");
             return nullptr;
         }
 
         status = napi_set_named_property(env, exports, "drawStill", drawStillFunction);
-        if (status != napi_ok)
+        if (didFail(env, status, "Failed to attach drawStill to exports."))
         {
-            napi_throw_error(env, NULL, "Failed to attach drawStill to exports.");
             return nullptr;
         }
 
         status = napi_create_function(env, nullptr, 0, drawFrameCallback, nullptr, &drawFrameFunction);
-        if (status != napi_ok)
+        if (didFail(env, status, "Failed to create function for drawFrameCallback."))
         {
-            napi_throw_error(env, NULL, "Failed to create function for drawFrameCallback.");
             return nullptr;
         }
 
         status = napi_set_named_property(env, exports, "drawFrame", drawFrameFunction);
-        if (status != napi_ok)
+        if (didFail(env, status, "Failed to attach drawFrame to exports."))
         {
-            napi_throw_error(env, NULL, "Failed to attach drawFrame to exports.");
+            return nullptr;
+        }
+
+        status = napi_create_function(env, nullptr, 0, testCallback, nullptr, &testFunction);
+        if (didFail(env, status, "Failed to create function for testCallback."))
+        {
+            return nullptr;
+        }
+
+        status = napi_set_named_property(env, exports, "test", testFunction);
+        if (didFail(env, status, "Failed to attach test to exports."))
+        {
             return nullptr;
         }
 
