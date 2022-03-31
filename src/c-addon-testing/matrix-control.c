@@ -31,44 +31,42 @@ ws2811_t ledInterface = {
     },
 };
 
-uint32_t height = 0;
-uint32_t width = 0;
+dimensions_t initDimensions = (dimensions_t){
+    .width = 0,
+    .height = 0,
+};
+
 bool initialized = false;
 
 dimensions_t getInitializedDimensions()
 {
-    dimensions_t dimensions = (dimensions_t){
-        .width = width,
-        .height = height,
-    };
-    return dimensions;
+    return initDimensions;
 }
 
 static void insertColors(ws2811_led_t *colors)
 {
-    for (uint32_t x = 0; x < width; x++)
+    for (uint32_t x = 0; x < initDimensions.width; x++)
     {
-        for (uint32_t y = 0; y < height; y++)
+        for (uint32_t y = 0; y < initDimensions.height; y++)
         {
-            uint32_t yIndex = x % 2 ? y : height - y - 1;
-            uint32_t xIndex = width - x - 1;
-            ledInterface.channel[0].leds[y + x * height] = colors[yIndex * width + xIndex];
+            uint32_t yIndex = x % 2 ? y : initDimensions.height - y - 1;
+            uint32_t xIndex = initDimensions.width - x - 1;
+            ledInterface.channel[0].leds[y + x * initDimensions.height] = colors[yIndex * initDimensions.width + xIndex];
         }
     }
 }
 
-bool ledInit(uint32_t passedWidth, uint32_t passedHeight, uint8_t brightness)
+bool ledInit(dimensions_t dimensions, uint8_t brightness)
 {
     if (initialized)
     {
         return true;
     }
 
-    height = passedHeight;
-    width = passedWidth;
+    initDimensions = dimensions;
 
     ledInterface.channel[0].brightness = brightness;
-    ledInterface.channel[0].count = height * width;
+    ledInterface.channel[0].count = dimensions.height * dimensions.width;
 
     ws2811_return_t initResult;
     if ((initResult = ws2811_init(&ledInterface)) != WS2811_SUCCESS)
@@ -102,7 +100,7 @@ bool ledCleanUp()
     return true;
 }
 
-bool drawStill(uint32_t width, uint32_t height, uint8_t brightness, ws2811_led_t *colors)
+bool drawStill(dimensions_t dimensions, uint8_t brightness, ws2811_led_t *colors)
 {
     if (initialized)
     {
@@ -110,7 +108,7 @@ bool drawStill(uint32_t width, uint32_t height, uint8_t brightness, ws2811_led_t
         ledCleanUp();
     }
 
-    bool initSuccess = ledInit(width, height, brightness);
+    bool initSuccess = ledInit(dimensions, brightness);
     if (!initSuccess)
     {
         return false;
