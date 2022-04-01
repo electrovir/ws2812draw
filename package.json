@@ -1,6 +1,6 @@
 {
     "name": "ws2812draw",
-    "version": "2.4.0",
+    "version": "3.0.0",
     "description": "Draw to a ws2812 LED matrix with a Raspberry Pi",
     "keywords": [
         "ws2812",
@@ -16,16 +16,23 @@
         "pi",
         "raspberry-pi"
     ],
+    "homepage": "https://github.com/electrovir/ws2812draw",
+    "bugs": {
+        "url": "https://github.com/electrovir/ws2812draw/issues"
+    },
     "repository": {
         "type": "git",
         "url": "https://github.com/electrovir/ws2812draw"
     },
     "license": "MIT",
-    "author": "electrovir",
-    "main": "dist/ts/index.js",
-    "typings": "dist/ts/index.d.ts",
+    "author": {
+        "name": "electrovir",
+        "url": "https://github.com/electrovir"
+    },
+    "main": "dist/index.js",
+    "typings": "dist/index.d.ts",
     "bin": {
-        "ws2812draw-test": "dist/ts/test.js"
+        "ws2812draw-test": "dist/tests/example.js"
     },
     "scripts": {
         "build": "node-gyp configure && node-gyp build",
@@ -33,9 +40,13 @@
         "example": "sudo -E env \"PATH=$PATH\" node dist/tests/example.js",
         "example:full:simple": "npm run build && npm run compile && npm run example:simple",
         "example:simple": "sudo -E env \"PATH=$PATH\" node dist/tests/simple-example.js",
+        "format": "virmator format write",
         "prepare": "npm run compile",
+        "prepublishOnly": "npm run test:full",
+        "spellcheck": "virmator spellcheck",
         "test": "sudo -E env \"PATH=$PATH\" ts-node --transpile-only src/ts/test.ts",
         "test:color": "ts-node --transpile-only src/ts/test-color.ts",
+        "test:full": "npm test && npm run spellcheck && virmator format check",
         "test:letters": "func() { npm run tsc && node dist/ts/test-text.js \"$@\"; }; func",
         "tsc": "rm -rf dist && tsc"
     },

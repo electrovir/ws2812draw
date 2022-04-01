@@ -6,7 +6,8 @@ import {checkSudo} from '../sudo';
 let shouldCheckSudo = true;
 
 /**
- * This library checks for sudo perimssions to assist in debugging. To disable those checks, call this function. Note that if you don't run this library with sudo permissions, it probably won't work.
+ * This library checks for sudo perimssions to assist in debugging. To disable those checks, call
+ * this function. Note that if you don't run this library with sudo permissions, it probably won't work.
  */
 export function ignoreSudoCheck() {
     shouldCheckSudo = false;
@@ -21,7 +22,7 @@ interface CApi {
 }
 
 export class Ws2812drawError extends Error {
-    public name = 'Ws2812drawError';
+    public override name = 'Ws2812drawError';
 }
 
 function createApiCaller(): <T>(callback: (api: CApi) => T) => T {
@@ -59,14 +60,14 @@ function validateBrightness(brightness: any): asserts brightness is number {
 }
 
 /**
- * @param brightness    led brightness, a number between 0 and 255 inclusive
- * @param colorMatrix    an array of colors for each pixel
- * @returns             true on draw success, otherwise false
+ * @param brightness Led brightness, a number between 0 and 255 inclusive
+ * @param colorMatrix An array of colors for each pixel
+ * @returns True on draw success, otherwise false
  */
 export function drawStill(brightness: number, colorMatrix: number[][]): boolean {
     validateBrightness(brightness);
     const dimensions = getMatrixSize(colorMatrix);
-    const result = makeApiCall(api =>
+    const result = makeApiCall((api) =>
         api.drawStill(dimensions.width, dimensions.height, brightness, flattenMatrix(colorMatrix)),
     );
     if (!result) {
@@ -76,13 +77,13 @@ export function drawStill(brightness: number, colorMatrix: number[][]): boolean 
 }
 
 /**
- * @param dimensions  size of the LED matrix
- * @param brightness  led brightness, a number between 0 and 255 inclusive
- * @returns           true on init success, otherwise false
+ * @param dimensions Size of the LED matrix
+ * @param brightness Led brightness, a number between 0 and 255 inclusive
+ * @returns True on init success, otherwise false
  */
 export function initMatrix(brightness: number, dimensions: MatrixDimensions): boolean {
     validateBrightness(brightness);
-    const result = makeApiCall(api =>
+    const result = makeApiCall((api) =>
         api.initMatrix(dimensions.width, dimensions.height, brightness),
     );
     if (!result) {
@@ -91,21 +92,20 @@ export function initMatrix(brightness: number, dimensions: MatrixDimensions): bo
     return result;
 }
 
-/**
- * Frees up all memory allocated by init
- */
+/** Frees up all memory allocated by init */
 export function cleanUp() {
-    makeApiCall(api => api.cleanUp());
+    makeApiCall((api) => api.cleanUp());
 }
 
 /**
- * initMatrix must be called before this can be used.
+ * InitMatrix must be called before this can be used.
  *
- * @param colorMatrix   The matrix of colors to draw. The dimensions of this matrix should match those passed to init.
- * @returns            true on draw success, otherwise false
+ * @param colorMatrix The matrix of colors to draw. The dimensions of this matrix should match those
+ *   passed to init.
+ * @returns True on draw success, otherwise false
  */
 export function drawFrame(colorMatrix: number[][]): boolean {
-    const result = makeApiCall(api => api.drawFrame(flattenMatrix(colorMatrix)));
+    const result = makeApiCall((api) => api.drawFrame(flattenMatrix(colorMatrix)));
     if (!result) {
         throw new Ws2812drawError(`must be initialized before drawing a frame`);
     }

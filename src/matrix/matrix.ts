@@ -1,7 +1,7 @@
 import {MatrixPaddingOption} from './matrix-options';
 
 export class MatrixError extends Error {
-    public name = 'MatrixError';
+    public override name = 'MatrixError';
 }
 
 export type MatrixDimensions = {
@@ -10,18 +10,16 @@ export type MatrixDimensions = {
 };
 
 export function appendMatrices<T>(...matrices: T[][][]): T[][] {
-    matrices.forEach(matrix => assertConsistentMatrixSize(matrix));
+    matrices.forEach((matrix) => assertConsistentMatrixSize(matrix));
     return matrices.reduce((accum, current) => {
         return appendMatrixPair(accum, current);
     }, [] as T[][]);
 }
 
-/**
- * Don't export this, this assumes that matrix size consistency has already been asserted
- */
+/** Don't export this, this assumes that matrix size consistency has already been asserted */
 function appendMatrixPair<T>(a: T[][], b: T[][]): T[][] {
     if (a.length && [0].length) {
-        return a.map((aRow, index) => aRow.concat(b[index]));
+        return a.map((aRow, index) => aRow.concat(b[index]!));
     } else {
         return b;
     }
@@ -37,7 +35,7 @@ export function getMatrixSize<T>(matrix: T[][]): MatrixDimensions {
     assertConsistentMatrixSize(matrix);
 
     return {
-        width: matrix[0].length,
+        width: matrix[0]!.length,
         height: matrix.length,
     };
 }
@@ -53,7 +51,7 @@ export function createMatrix<T>(dimensions: MatrixDimensions, fillValue: T): T[]
 }
 
 export function chopMatrix<T>(matrix: T[][], index: number, length?: number): T[][] {
-    return matrix.map(row =>
+    return matrix.map((row) =>
         row.filter((_, cellIndex) => {
             const endIndex = length ? index + length : row.length - 1 - index;
             return cellIndex >= index && cellIndex < endIndex;
@@ -63,8 +61,12 @@ export function chopMatrix<T>(matrix: T[][], index: number, length?: number): T[
 
 export function assertConsistentMatrixSize<T>(matrix: T[][]): void {
     if (matrix.length) {
-        const width = matrix[0].length;
-        if (matrix.some(row => row.length !== width)) {
+        const width = matrix[0]?.length;
+        if (width == undefined) {
+            throw new MatrixError(`matrix does not have a first row`);
+        }
+
+        if (matrix.some((row) => row.length !== width)) {
             throw new MatrixError(`matrix rows are not all of equal length`);
         }
     }
@@ -76,7 +78,7 @@ export function getPadDifference<T>(
     paddingStyle: MatrixPaddingOption,
 ): {left: number; right: number} {
     assertConsistentMatrixSize(matrix);
-    const difference = width - matrix[0].length;
+    const difference = width - matrix[0]!.length;
     if (difference < 0) {
         return {
             left: 0,
@@ -113,7 +115,7 @@ export function padMatrix<T>(
     paddingFill: T,
     paddingStyle: MatrixPaddingOption = MatrixPaddingOption.Left,
 ): T[][] {
-    if (matrix[0].length < width && paddingStyle !== MatrixPaddingOption.None) {
+    if (matrix[0]!.length < width && paddingStyle !== MatrixPaddingOption.None) {
         const {left, right} = getPadDifference(matrix, width, paddingStyle);
         const leftPadMatrix = createMatrix(
             {
@@ -143,6 +145,6 @@ export function maskMatrix<T>(
     emptyFill: T,
 ): T[][] {
     return colorMatrix.map((row, rowIndex) =>
-        row.map((cell, cellIndex) => (!!mask[rowIndex][cellIndex] ? cell : emptyFill)),
+        row.map((cell, cellIndex) => (!!mask[rowIndex]![cellIndex] ? cell : emptyFill)),
     );
 }

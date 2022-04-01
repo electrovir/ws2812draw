@@ -7,11 +7,11 @@ import {drawStill} from './base-draw-api';
 /**
  * Draw a string directly to the led display
  *
- * @param brightness     LED brightness for the display
- * @param input          string to draw
- * @param options        either an array of LetterOptions to be applied to each character or a single LetterOptions to
- *                          be applied to the whole string. See LetterOptions type for available options.
- * @returns              true if success, otherwise false
+ * @param brightness LED brightness for the display
+ * @param input String to draw
+ * @param options Either an array of LetterOptions to be applied to each character or a single
+ *   LetterOptions to be applied to the whole string. See LetterOptions type for available options.
+ * @returns True if success, otherwise false
  */
 export function drawText(
     brightness: number,

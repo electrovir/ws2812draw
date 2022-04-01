@@ -1,34 +1,23 @@
 import {LedColor} from '../color';
 /**
- * Used to determine how to pad matrices.
- * The value name (ex. LEFT) is the side of the given matrix that the padding is added to.
- * The opposite side remains unchagned. (ex. LEFT padding will result in the left side of the matrix being filled up)
+ * Used to determine how to pad matrices. The value name (ex. LEFT) is the side of the given matrix
+ * that the padding is added to. The opposite side remains unchagned. (ex. LEFT padding will result
+ * in the left side of the matrix being filled up)
  */
 export enum MatrixPaddingOption {
-    /**
-     * add padding on the left side (image gets pushed to right side)
-     */
+    /** Add padding on the left side (image gets pushed to right side) */
     Left = 'left',
-    /**
-     * add padding on the right side (image gets pushed to left side)
-     */
+    /** Add padding on the right side (image gets pushed to left side) */
     Right = 'right',
-    /**
-     * add padding to both sides evenly (image gets centered)
-     */
+    /** Add padding to both sides evenly (image gets centered) */
     Both = 'both',
-    /**
-     * don't add any padding
-     */
+    /** Don't add any padding */
     None = 'none',
 }
 
 /**
- * Options for drawing strings or characters.
- * defaults (copied from defaultTextOptions):
- *      foregroundColor: LedColor.WHITE,
- *      backgroundColor: LedColor.BLACK,
- *      monospace: false,
+ * Options for drawing strings or characters. defaults (copied from defaultTextOptions):
+ * foregroundColor: LedColor.WHITE, backgroundColor: LedColor.BLACK, monospace: false,
  */
 export type LetterOptions = Partial<{
     foregroundColor: LedColor;

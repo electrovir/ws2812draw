@@ -3,6 +3,7 @@ import {overrideDefinedProperties} from '../augments/object';
 import {LedColor} from '../color';
 import {
     appendMatrices,
+    assertConsistentMatrixSize,
     chopMatrix,
     createMatrix,
     getPadDifference,
@@ -16,14 +17,14 @@ import {drawFrame, initMatrix} from './base-draw-api';
 /**
  * Draw text and have it scroll across the LED display like a <marquee>
  *
- * @param input             string to scroll
- * @param width             pixel count of LED display's width
- * @param brightness        brightness for LED display
- * @param letterOptions     either an array of LetterOptions to be applied to each character or a single LetterOptions to
- *                              be applied to the whole string. See LetterOptions type for available options.
- * @param scrollOptions     options for scrolling. See DrawScrollOptions type for available options.
- * @returns                 a promise that is resolved once the scrolling has finished. If the scroll count is set to
- *                              infinite (the default) it will never resolve.
+ * @param input String to scroll
+ * @param width Pixel count of LED display's width
+ * @param brightness Brightness for LED display
+ * @param letterOptions Either an array of LetterOptions to be applied to each character or a single
+ *   LetterOptions to be applied to the whole string. See LetterOptions type for available options.
+ * @param scrollOptions Options for scrolling. See DrawScrollOptions type for available options.
+ * @returns A promise that is resolved once the scrolling has finished. If the scroll count is set
+ *   to infinite (the default) it will never resolve.
  */
 export function drawScrollingText(
     width: number,
@@ -59,10 +60,10 @@ interface InternalScrollingEventEmitter extends EventEmitter {
 /**
  * Scrolls an image (color matrix) horizontally leftwards across the LED display
  *
- * @param matrix                     color matrix to scroll
- * @param width                      width of the LED display
- * @param brightness                 set the LED brightness
- * @param rawInputScrollOptions      options for scrolling, see DrawScrollOptions type for available options
+ * @param matrix Color matrix to scroll
+ * @param width Width of the LED display
+ * @param brightness Set the LED brightness
+ * @param rawInputScrollOptions Options for scrolling, see DrawScrollOptions type for available options
  */
 export function drawScrollingImage(
     width: number,
@@ -79,11 +80,12 @@ export function drawScrollingImage(
     function isLastLoop(loopCount: number) {
         return loopCount + 1 >= options.loopCount;
     }
-    let fullMatrix = matrix;
+    let fullMatrix = [...matrix];
+    assertConsistentMatrixSize(fullMatrix);
 
     if (options.padding === MatrixPaddingOption.None) {
         // append the image itself until it fills the display
-        while (fullMatrix[0].length < width) {
+        while (fullMatrix[0]!.length < width) {
             fullMatrix = appendMatrices(fullMatrix, matrix);
         }
     } else {
@@ -104,7 +106,7 @@ export function drawScrollingImage(
         );
     }
 
-    const startingIndex = options.scrollDirection === 'left' ? 0 : fullMatrix[0].length;
+    const startingIndex = options.scrollDirection === 'left' ? 0 : fullMatrix[0]!.length;
     const increment = options.scrollDirection === 'left' ? 1 : -1;
 
     let keepScrolling = true;
@@ -124,7 +126,7 @@ export function drawScrollingImage(
                 !options.drawAfterLastScroll && isLastLoop(currentScrollLoop)
                     ? createMatrix(
                           {
-                              width: fullMatrix[0].length,
+                              width: fullMatrix[0]!.length,
                               height: fullMatrix.length,
                           },
                           options.padBackgroundColor,
@@ -141,7 +143,7 @@ export function drawScrollingImage(
             );
             // still within current loop
             if (
-                (pixelIndex < fullMatrix[0].length && options.scrollDirection === 'left') ||
+                (pixelIndex < fullMatrix[0]!.length && options.scrollDirection === 'left') ||
                 (pixelIndex > 0 && options.scrollDirection === 'right')
             ) {
                 // pause on the first frame of the first loop

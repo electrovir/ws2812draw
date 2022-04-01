@@ -1,10 +1,9 @@
-import {LedColor} from '..';
-import {drawScrollingText} from '..';
+import {drawScrollingText, LedColor} from '..';
 
 function testText() {
     const inputBrightness = process.argv[2];
-    const inputColor = process.argv[3].toUpperCase();
-    const inputString = process.argv[4];
+    const inputColor = process.argv[3]?.toUpperCase() ?? '';
+    const inputString = process.argv[4] ?? '';
     const frameDelay = Number(process.argv[5]) || undefined;
     const iterationDelay = Number(process.argv[6]) || undefined;
     const count = Number(process.argv[7]);

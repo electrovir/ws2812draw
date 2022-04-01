@@ -10,9 +10,9 @@ const defaultDuration = 5000;
 
 function runScrollRainbowTest(options?: draw.DrawScrollOptions) {
     const colorValues = getEnumTypedValues(draw.LedColor);
-    const colors = draw
+    const colors: number[][] = draw
         .createArray(dimensions.height, Array(colorValues.length).fill(0))
-        .map(row => row.map((_, index) => colorValues[index]));
+        .map((row): number[] => row.map((_, index): number => colorValues[index]!));
     return draw.drawScrollingImage(dimensions.width, brightness, colors, options);
 }
 
@@ -53,7 +53,7 @@ const tests: Test[] = [
                             nextIndex++;
                         }
 
-                        if (nextIndex >= giantMatrix[0].length - dimensions.width) {
+                        if (nextIndex >= giantMatrix[0]!.length - dimensions.width) {
                             nextIndex--;
                             backwards = true;
                         } else if (nextIndex < 0) {
@@ -249,14 +249,62 @@ const tests: Test[] = [
     {
         run: () => {
             draw.registerCustomLetter('<', [
-                [0, 0, 0, 1, 1],
-                [0, 0, 1, 1, 0],
-                [0, 1, 1, 0, 0],
-                [1, 1, 0, 0, 0],
-                [1, 1, 0, 0, 0],
-                [0, 1, 1, 0, 0],
-                [0, 0, 1, 1, 0],
-                [0, 0, 0, 1, 1],
+                [
+                    0,
+                    0,
+                    0,
+                    1,
+                    1,
+                ],
+                [
+                    0,
+                    0,
+                    1,
+                    1,
+                    0,
+                ],
+                [
+                    0,
+                    1,
+                    1,
+                    0,
+                    0,
+                ],
+                [
+                    1,
+                    1,
+                    0,
+                    0,
+                    0,
+                ],
+                [
+                    1,
+                    1,
+                    0,
+                    0,
+                    0,
+                ],
+                [
+                    0,
+                    1,
+                    1,
+                    0,
+                    0,
+                ],
+                [
+                    0,
+                    0,
+                    1,
+                    1,
+                    0,
+                ],
+                [
+                    0,
+                    0,
+                    0,
+                    1,
+                    1,
+                ],
             ]);
 
             draw.drawText(brightness, '< < <');
@@ -301,13 +349,13 @@ const tests: Test[] = [
         run: () => {
             let stillGoing = true;
             const colorValues = getEnumTypedValues(draw.LedColor).filter(
-                color => color !== draw.LedColor.Black && color !== draw.LedColor.White,
+                (color) => color !== draw.LedColor.Black && color !== draw.LedColor.White,
             );
             let colorIndex = 0;
             let nextColorIndex = 1;
             const ratioIncrement = 0.05;
             let currentDiffRatio = 0;
-            let colorMatrix = draw.createMatrix(dimensions, colorValues[colorIndex]);
+            let colorMatrix = draw.createMatrix(dimensions, colorValues[colorIndex]!);
 
             const emitter = new EventEmitter() as draw.ScrollEmitter;
 
@@ -328,8 +376,8 @@ const tests: Test[] = [
                         }
 
                         const colorToDraw = draw.diffColors(
-                            colorValues[colorIndex],
-                            colorValues[nextColorIndex],
+                            colorValues[colorIndex]!,
+                            colorValues[nextColorIndex]!,
                             currentDiffRatio,
                         );
 
@@ -524,7 +572,7 @@ async function runTest(test: Test) {
     countDown(duration);
     const emitter = test.run();
     return await Promise.all([
-        new Promise<void>(resolve => {
+        new Promise<void>((resolve) => {
             if (emitter) {
                 emitter.on('done', () => {
                     resolve();
@@ -533,7 +581,7 @@ async function runTest(test: Test) {
                 resolve();
             }
         }),
-        new Promise<void>(resolve => {
+        new Promise<void>((resolve) => {
             setTimeout(() => {
                 if (emitter) {
                     emitter.emit('stop');
@@ -548,12 +596,12 @@ async function runTestsCli(testArray: Test[], exclusiveIndex?: number) {
     if (exclusiveIndex == undefined) {
         for (let index = 0; index < testArray.length; index++) {
             console.log(`index ${index} out of ${testArray.length - 1} total`);
-            await runTest(testArray[index]);
+            await runTest(testArray[index]!);
             draw.cleanUp();
         }
     } else {
         console.log(`Only testing index ${exclusiveIndex}`);
-        await runTest(testArray[exclusiveIndex]);
+        await runTest(testArray[exclusiveIndex]!);
     }
 }
 

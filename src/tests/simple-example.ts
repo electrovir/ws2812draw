@@ -2,7 +2,8 @@ import {drawScrollingText} from '..';
 
 function main() {
     /**
-     *  Extra spaces are intentionally included at the end to make the text more legible in the simplest way possible. (For more complex padding, use custom alignment options.)
+     * Extra spaces are intentionally included at the end to make the text more legible in the
+     * simplest way possible. (For more complex padding, use custom alignment options.)
      */
     drawScrollingText(32, 50, 'hello world   ');
 }

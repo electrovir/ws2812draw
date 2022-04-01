@@ -1,19 +1,21 @@
 import {cleanUp, drawFrame, initMatrix, LedColor, MatrixDimensions} from '..';
 
 const colorValues = Object.keys(LedColor)
-    .filter(key => isNaN(Number(key)))
-    .map(key => (LedColor as any)[key] as LedColor);
+    .filter((key) => isNaN(Number(key)))
+    .map((key) => (LedColor as any)[key] as LedColor);
 
 let values: number[][];
-let frameDelay = 100;
+let frameDelay = 500;
 let lastTime = process.hrtime()[0];
 let frameCount = 0;
 
 function draw(increment: boolean) {
     drawFrame(values);
     if (increment) {
-        values = values.map(row =>
-            row.map(value => colorValues[(colorValues.indexOf(value) + 1) % colorValues.length]),
+        values = values.map((row): number[] =>
+            row.map((value): number => {
+                return colorValues[(colorValues.indexOf(value) + 1) % colorValues.length]!;
+            }),
         );
     }
     return true;
@@ -49,7 +51,7 @@ export function testDraw(brightness: number, dimensions: MatrixDimensions, input
     stdin.resume();
     stdin.setEncoding('utf8');
     // on any data into stdin
-    stdin.on('data', buffer => {
+    stdin.on('data', (buffer) => {
         const key = buffer.toString();
         const oldDelay = frameDelay;
         // ctrl-c ( end of text )

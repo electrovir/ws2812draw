@@ -51,8 +51,16 @@ Example:
 ```typescript
 import {drawStill, LedColor} from 'ws2812draw';
 drawStill(50, [
-    [LedColor.Black, LedColor.Red, LedColor.Orange],
-    [LedColor.Black, LedColor.Red, LedColor.Orange],
+    [
+        LedColor.Black,
+        LedColor.Red,
+        LedColor.Orange,
+    ],
+    [
+        LedColor.Black,
+        LedColor.Red,
+        LedColor.Orange,
+    ],
 ]);
 ```
 
@@ -183,14 +191,62 @@ Example:
 ```typescript
 import {registerCustomLetter} from 'ws2812draw';
 registerCustomLetter('<', [
-    [0, 0, 0, 1, 1],
-    [0, 0, 1, 1, 0],
-    [0, 1, 1, 0, 0],
-    [1, 1, 0, 0, 0],
-    [1, 1, 0, 0, 0],
-    [0, 1, 1, 0, 0],
-    [0, 0, 1, 1, 0],
-    [0, 0, 0, 1, 1],
+    [
+        0,
+        0,
+        0,
+        1,
+        1,
+    ],
+    [
+        0,
+        0,
+        1,
+        1,
+        0,
+    ],
+    [
+        0,
+        1,
+        1,
+        0,
+        0,
+    ],
+    [
+        1,
+        1,
+        0,
+        0,
+        0,
+    ],
+    [
+        1,
+        1,
+        0,
+        0,
+        0,
+    ],
+    [
+        0,
+        1,
+        1,
+        0,
+        0,
+    ],
+    [
+        0,
+        0,
+        1,
+        1,
+        0,
+    ],
+    [
+        0,
+        0,
+        0,
+        1,
+        1,
+    ],
 ]);
 ```
 
@@ -250,8 +306,16 @@ Example:
 ```typescript
 import {LedColor, drawFrame} from 'ws2812draw';
 drawFrame([
-    [LedColor.Black, LedColor.Red, LedColor.Orange],
-    [LedColor.Black, LedColor.Red, LedColor.Orange],
+    [
+        LedColor.Black,
+        LedColor.Red,
+        LedColor.Orange,
+    ],
+    [
+        LedColor.Black,
+        LedColor.Red,
+        LedColor.Orange,
+    ],
 ]);
 ```
 
