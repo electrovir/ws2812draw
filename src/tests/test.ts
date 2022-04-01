@@ -1,6 +1,6 @@
+import {EventEmitter} from 'events';
 import * as draw from '..';
 import {getEnumTypedValues} from '../augments/object';
-import {EventEmitter} from 'events';
 
 type Test = {run: () => draw.ScrollEmitter | void; label: string; duration?: number};
 
@@ -87,31 +87,31 @@ const tests: Test[] = [
     },
     // 3
     {
-        run: () => runScrollRainbowTest({padding: draw.MatrixPaddingOption.NONE}),
+        run: () => runScrollRainbowTest({padding: draw.MatrixPaddingOption.None}),
         label: 'Should scroll unpadded rainbow',
         duration: 10000,
     },
     // 4
     {
-        run: () => runScrollRainbowTest({padding: draw.MatrixPaddingOption.RIGHT, loopCount: 1}),
+        run: () => runScrollRainbowTest({padding: draw.MatrixPaddingOption.Right, loopCount: 1}),
         label: 'Should scroll RIGHT padded rainbow once',
         duration: 10000,
     },
     // 5
     {
-        run: () => runScrollRainbowTest({padding: draw.MatrixPaddingOption.BOTH, loopCount: 1}),
+        run: () => runScrollRainbowTest({padding: draw.MatrixPaddingOption.Both, loopCount: 1}),
         label: 'Should scroll BOTH padded rainbow once',
         duration: 10000,
     },
     // 6
     {
-        run: () => runScrollRainbowTest({padding: draw.MatrixPaddingOption.LEFT, loopCount: 1}),
+        run: () => runScrollRainbowTest({padding: draw.MatrixPaddingOption.Left, loopCount: 1}),
         label: 'Should scroll LEFT padded rainbow once',
         duration: 10000,
     },
     // 7
     {
-        run: () => runScrollRainbowTest({padding: draw.MatrixPaddingOption.LEFT, loopCount: 3}),
+        run: () => runScrollRainbowTest({padding: draw.MatrixPaddingOption.Left, loopCount: 3}),
         label: 'Should scroll LEFT padded rainbow THRICE',
         duration: 15000,
     },
@@ -119,7 +119,7 @@ const tests: Test[] = [
     {
         run: () =>
             runScrollRainbowTest({
-                padding: draw.MatrixPaddingOption.NONE,
+                padding: draw.MatrixPaddingOption.None,
                 frameDelayMs: 0,
             }),
         label: 'Should scroll unpadded rainbow REALLY FAST',
@@ -128,7 +128,7 @@ const tests: Test[] = [
     {
         run: () =>
             runScrollRainbowTest({
-                padding: draw.MatrixPaddingOption.NONE,
+                padding: draw.MatrixPaddingOption.None,
                 loopDelayMs: 1000,
             }),
         label: 'Should scroll unpadded rainbow and pause on iterations',
@@ -138,7 +138,7 @@ const tests: Test[] = [
     {
         run: () =>
             runScrollRainbowTest({
-                padding: draw.MatrixPaddingOption.LEFT,
+                padding: draw.MatrixPaddingOption.Left,
                 padBackgroundColor: draw.LedColor.Turquoise,
             }),
         label: 'Should pad rainbow with color',
@@ -289,7 +289,7 @@ const tests: Test[] = [
                 {},
                 {
                     padColor: draw.LedColor.Black,
-                    padding: draw.MatrixPaddingOption.BOTH,
+                    padding: draw.MatrixPaddingOption.Both,
                     width: dimensions.width,
                 },
             );
@@ -386,7 +386,7 @@ const tests: Test[] = [
                     colorMatrix,
                     dimensions.width,
                     draw.LedColor.Black,
-                    draw.MatrixPaddingOption.LEFT,
+                    draw.MatrixPaddingOption.Left,
                 ),
             );
         },
@@ -397,7 +397,7 @@ const tests: Test[] = [
     {
         run: () =>
             runScrollRainbowTest({
-                padding: draw.MatrixPaddingOption.LEFT,
+                padding: draw.MatrixPaddingOption.Left,
                 emptyFrameBetweenLoops: true,
                 loopDelayMs: 1000,
             }),
@@ -408,7 +408,7 @@ const tests: Test[] = [
     {
         run: () =>
             runScrollRainbowTest({
-                padding: draw.MatrixPaddingOption.LEFT,
+                padding: draw.MatrixPaddingOption.Left,
                 emptyFrameBetweenLoops: true,
                 scrollDirection: 'right',
                 loopDelayMs: 1000,
@@ -420,7 +420,7 @@ const tests: Test[] = [
     {
         run: () =>
             runScrollRainbowTest({
-                padding: draw.MatrixPaddingOption.LEFT,
+                padding: draw.MatrixPaddingOption.Left,
                 emptyFrameBetweenLoops: true,
                 scrollDirection: 'right',
                 loopDelayMs: 1000,
@@ -433,7 +433,7 @@ const tests: Test[] = [
     {
         run: () =>
             runScrollRainbowTest({
-                padding: draw.MatrixPaddingOption.NONE,
+                padding: draw.MatrixPaddingOption.None,
                 scrollDirection: 'right',
             }),
         label: 'Should work scrolling right',
@@ -450,7 +450,7 @@ const tests: Test[] = [
                 {
                     emptyFrameBetweenLoops: true,
                     loopDelayMs: 2000,
-                    padding: draw.MatrixPaddingOption.LEFT,
+                    padding: draw.MatrixPaddingOption.Left,
                     loopCount: 2,
                 },
             ),
@@ -468,7 +468,7 @@ const tests: Test[] = [
                 },
                 {
                     width: dimensions.width,
-                    padding: draw.MatrixPaddingOption.LEFT,
+                    padding: draw.MatrixPaddingOption.Left,
                 },
             ),
         label: 'Should draw short, padded text normally',
@@ -486,7 +486,7 @@ const tests: Test[] = [
                     emptyFrameBetweenLoops: true,
                     loopDelayMs: 2000,
                     frameDelayMs: 16,
-                    padding: draw.MatrixPaddingOption.LEFT,
+                    padding: draw.MatrixPaddingOption.Left,
                     loopCount: 2,
                     drawAfterLastScroll: false,
                 },
@@ -500,7 +500,7 @@ const tests: Test[] = [
                     },
                     {
                         width: dimensions.width,
-                        padding: draw.MatrixPaddingOption.BOTH,
+                        padding: draw.MatrixPaddingOption.Both,
                     },
                 );
             });

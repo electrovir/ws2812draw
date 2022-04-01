@@ -1,89 +1,51 @@
 import {EventEmitter} from 'events';
-import {overrideDefinedProperties} from './augments/object';
-import {LedColor} from './color';
-import {drawFrame, initMatrix} from './draw';
+import {overrideDefinedProperties} from '../augments/object';
+import {LedColor} from '../color';
 import {
     appendMatrices,
     chopMatrix,
     createMatrix,
     getPadDifference,
-    MatrixPaddingOption,
     padMatrix,
-} from './matrix';
+} from '../matrix/matrix';
+import {LetterOptions, MatrixPaddingOption} from '../matrix/matrix-options';
+import {textToColorMatrix} from '../matrix/matrix-text';
+import {DrawScrollOptions, ScrollEmitter} from '../matrix/scroll-types';
+import {drawFrame, initMatrix} from './base-draw-api';
 
 /**
- * Options for scrolling.
+ * Draw text and have it scroll across the LED display like a <marquee>
+ *
+ * @param input             string to scroll
+ * @param width             pixel count of LED display's width
+ * @param brightness        brightness for LED display
+ * @param letterOptions     either an array of LetterOptions to be applied to each character or a single LetterOptions to
+ *                              be applied to the whole string. See LetterOptions type for available options.
+ * @param scrollOptions     options for scrolling. See DrawScrollOptions type for available options.
+ * @returns                 a promise that is resolved once the scrolling has finished. If the scroll count is set to
+ *                              infinite (the default) it will never resolve.
  */
-export type DrawScrollOptions = Partial<{
-    /**
-     * scroll this number of times before stopping. -1 indicates it should never stop
-     * default is -1
-     */
-    loopCount: number;
-    /**
-     * delay in milliseconds between each pixel increment of the scroll
-     * default is 100
-     */
-    frameDelayMs: number;
-    /**
-     * delay in milliseconds between each full loop
-     * defaults to 0
-     */
-    loopDelayMs: number;
-    /**
-     * options for padding the given image
-     * default is MatrixPaddingOption.LEFT
-     */
-    padding: MatrixPaddingOption;
-    /**
-     * color for the padding created by the the padding or the emptyFrameBetweenLoops properties
-     * default is LedColor.BLACK
-     */
-    padBackgroundColor: LedColor;
-    /**
-     * causes each loop to end with padding the width of the whole LED matrix
-     * useful for looping text so that the loop position is obvious
-     * default is false
-     */
-    emptyFrameBetweenLoops: boolean;
-    /**
-     * chooses the direction of scrolling, to the left or to the right
-     * default is 'left'
-     */
-    scrollDirection: 'left' | 'right';
-    /**
-     * determines whether the scrolling image should be drawn again after the last loop is finished
-     * default is true
-     */
-    drawAfterLastScroll: boolean;
-}>;
+export function drawScrollingText(
+    width: number,
+    brightness: number,
+    input: string,
+    letterOptions: LetterOptions | LetterOptions[] = {},
+    scrollOptions: DrawScrollOptions = {},
+): ScrollEmitter {
+    const matrix = textToColorMatrix(input, letterOptions);
+    return drawScrollingImage(width, brightness, matrix, scrollOptions);
+}
 
 const defaultScrollOptions: Required<DrawScrollOptions> = {
     loopCount: -1, // -1 means infinite
     frameDelayMs: 100,
     loopDelayMs: 0,
-    padding: MatrixPaddingOption.LEFT,
+    padding: MatrixPaddingOption.Left,
     padBackgroundColor: LedColor.Black,
     emptyFrameBetweenLoops: false,
     scrollDirection: 'left',
     drawAfterLastScroll: true,
 };
-
-/**
- * stop event: emit this to stop the scrolling
- *
- * done event: listen to this to know when the scrolling is done
- * loop event: listen to this to know when the scroll loops (and how many times it has looped)
- */
-export interface ScrollEmitter extends EventEmitter {
-    emit(type: 'stop'): boolean;
-
-    on(type: 'done', listener: () => void): this;
-    once(type: 'done', listener: () => void): this;
-
-    on(type: 'loop', listener: (count: number) => void): this;
-    once(type: 'loop', listener: (count: number) => void): this;
-}
 
 // for internal use only
 interface InternalScrollingEventEmitter extends EventEmitter {
@@ -119,7 +81,7 @@ export function drawScrollingImage(
     }
     let fullMatrix = matrix;
 
-    if (options.padding === MatrixPaddingOption.NONE) {
+    if (options.padding === MatrixPaddingOption.None) {
         // append the image itself until it fills the display
         while (fullMatrix[0].length < width) {
             fullMatrix = appendMatrices(fullMatrix, matrix);

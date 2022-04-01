@@ -1,4 +1,4 @@
-import {drawScrollingText} from '../matrix-text';
+import {drawScrollingText} from '..';
 
 function main() {
     /**

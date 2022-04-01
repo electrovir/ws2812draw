@@ -87,7 +87,7 @@ export function testDraw(brightness: number, dimensions: MatrixDimensions, input
 function main() {
     const width = Number(process.argv[2]) || 8;
     const height = Number(process.argv[3]) || 8;
-    const brightness = Number(process.argv[4]) || 50;
+    const brightness = Number(process.argv[4]) || 30;
     const color = Number(process.argv[5]) || undefined;
     console.log(`Running with led array size ${height}x${width}, brightness ${brightness}`);
 

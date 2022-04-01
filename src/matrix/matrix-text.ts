@@ -1,41 +1,8 @@
-import {LedColor} from './color';
-import {stringToLetterMatrix, monospacePadLetter, letterSpacer} from './letter';
-import {
-    getMatrixSize,
-    createMatrix,
-    maskMatrix,
-    appendMatrices,
-    MatrixPaddingOption,
-    padMatrix,
-} from './matrix';
-import {drawStill} from './draw';
-import {DrawScrollOptions, drawScrollingImage, ScrollEmitter} from './scroll';
-import {overrideDefinedProperties} from './augments/object';
-
-/**
- * Options for drawing strings or characters.
- * defaults (copied from defaultTextOptions):
- *      foregroundColor: LedColor.WHITE,
- *      backgroundColor: LedColor.BLACK,
- *      monospace: false,
- */
-export type LetterOptions = Partial<{
-    foregroundColor: LedColor;
-    backgroundColor: LedColor;
-    monospace: boolean;
-}>;
-
-const defaultTextOptions: Required<LetterOptions> = {
-    foregroundColor: LedColor.White,
-    backgroundColor: LedColor.Black,
-    monospace: false,
-};
-
-export type AlignmentOptions = {
-    width: number;
-    padding: MatrixPaddingOption;
-    padColor?: LedColor;
-};
+import {overrideDefinedProperties} from '../augments/object';
+import {LedColor} from '../color';
+import {letterSpacer, monospacePadLetter, stringToLetterMatrix} from './letter';
+import {appendMatrices, createMatrix, getMatrixSize, maskMatrix} from './matrix';
+import {defaultTextOptions, LetterOptions} from './matrix-options';
 
 /**
  * Converts a string into a color array that can be passed directly into draw functions.
@@ -90,51 +57,4 @@ export function textToColorMatrix(
         }, []);
 
     return coloredTextMatrix;
-}
-
-/**
- * Draw a string directly to the led display
- *
- * @param input          string to draw
- * @param brightness     LED brightness for the display
- * @param options        either an array of LetterOptions to be applied to each character or a single LetterOptions to
- *                          be applied to the whole string. See LetterOptions type for available options.
- * @returns              true if success, otherwise false
- */
-export function drawText(
-    brightness: number,
-    input: string,
-    options: LetterOptions | LetterOptions[] = {},
-    alignmentOptions?: AlignmentOptions,
-): void {
-    let matrix = textToColorMatrix(input, options);
-    if (alignmentOptions) {
-        const padColor =
-            alignmentOptions.padColor == undefined ? LedColor.Black : alignmentOptions.padColor;
-        matrix = padMatrix(matrix, alignmentOptions.width, padColor, alignmentOptions.padding);
-    }
-    drawStill(brightness, matrix);
-}
-
-/**
- * Draw text and have it scroll across the LED display like a <marquee>
- *
- * @param input             string to scroll
- * @param width             pixel count of LED display's width
- * @param brightness        brightness for LED display
- * @param letterOptions     either an array of LetterOptions to be applied to each character or a single LetterOptions to
- *                              be applied to the whole string. See LetterOptions type for available options.
- * @param scrollOptions     options for scrolling. See DrawScrollOptions type for available options.
- * @returns                 a promise that is resolved once the scrolling has finished. If the scroll count is set to
- *                              infinite (the default) it will never resolve.
- */
-export function drawScrollingText(
-    width: number,
-    brightness: number,
-    input: string,
-    letterOptions: LetterOptions | LetterOptions[] = {},
-    scrollOptions: DrawScrollOptions = {},
-): ScrollEmitter {
-    const matrix = textToColorMatrix(input, letterOptions);
-    return drawScrollingImage(width, brightness, matrix, scrollOptions);
 }

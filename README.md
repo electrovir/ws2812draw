@@ -14,14 +14,21 @@ npm install ws2812draw
 
 On a fresh install of Raspian Pi OS on a Raspberry Pi, no software setup beyond `npm install` is required.
 
-Hardware wise, this uses [Pin 12 aka BCM 18](https://pinout.xyz/pinout/pin12_gpio18) for the LED matrix's data line.  Further explanations for which GPIO pins _can_ be used at the C library level are contained in the [rpi_ws281x library's README](https://github.com/jgarff/rpi_ws281x#gpio-usage). However, this package currently doesn't interface with that since I found it works easiest to just leave it on the default (`BCM 18`).
+Hardware wise, this uses [Pin 12 aka BCM 18](https://pinout.xyz/pinout/pin12_gpio18) for the LED matrix's data line. Further explanations for which GPIO pins _can_ be used at the C library level are contained in the [rpi_ws281x library's README](https://github.com/jgarff/rpi_ws281x#gpio-usage). However, this package currently doesn't interface with that since I found it works easiest to just leave it on the default (`BCM 18`).
 
 I found that my 32x8 LED matrix can be fully driven at _very high brightness_ by the Raspberry Pi's 5v power pin, no power supply needed besides the Pi's.
+
+# Basic Test
+
+```bash
+npm run example:full:simple
+```
+
+If this works, you're doing good!
 
 # Example
 
 ```bash
-sudo su
 npm run example
 ```
 
@@ -44,8 +51,8 @@ Example:
 ```typescript
 import {drawStill, LedColor} from 'ws2812draw';
 drawStill(50, [
-    [LedColor.BLACK, LedColor.RED, LedColor.ORANGE],
-    [LedColor.BLACK, LedColor.RED, LedColor.ORANGE],
+    [LedColor.Black, LedColor.Red, LedColor.Orange],
+    [LedColor.Black, LedColor.Red, LedColor.Orange],
 ]);
 ```
 
@@ -81,22 +88,22 @@ import {drawScrollingImage} from 'ws2812draw';
 // options is optional
 // without options
 drawScrollingImage(50, [
-    [LedColor.BLACK, LedColor.RED, LedColor.ORANGE],
-    [LedColor.BLACK, LedColor.RED, LedColor.ORANGE],
+    [LedColor.Black, LedColor.Red, LedColor.Orange],
+    [LedColor.Black, LedColor.Red, LedColor.Orange],
 ]);
 // with options
 cosnt emitter = drawScrollingImage(
     50,
     [
-        [LedColor.BLACK, LedColor.RED, LedColor.ORANGE],
-        [LedColor.BLACK, LedColor.RED, LedColor.ORANGE],
+        [LedColor.Black, LedColor.Red, LedColor.Orange],
+        [LedColor.Black, LedColor.Red, LedColor.Orange],
     ],
     {
         loopCount: -1, // -1 means infinite
         frameDelayMs: 100,
         loopDelayMs: 0,
-        padding: MatrixPaddingOption.LEFT,
-        padBackgroundColor: LedColor.BLACK,
+        padding: MatrixPaddingOption.Left,
+        padBackgroundColor: LedColor.Black,
         emptyFrameBetweenLoops: false,
         scrollDirection: 'left',
     },
@@ -128,8 +135,8 @@ import {drawText, LedColor, MatrixPaddingOption} from 'ws2812draw';
 drawText(50, 'Hi!');
 // with options
 drawText(50, 'Hi!', ({
-    foregroundColor: LedColor.RED,
-    backgroundColor: LedColor.BLUE,
+    foregroundColor: LedColor.Red,
+    backgroundColor: LedColor.Blue,
     monospace: false,
 });
 // with alignment options
@@ -137,13 +144,13 @@ drawText(
     50,
     'Hi!',
     {
-        foregroundColor: LedColor.RED,
-        backgroundColor: LedColor.BLUE,
+        foregroundColor: LedColor.Red,
+        backgroundColor: LedColor.Blue,
     },
     {
         width: 32,
-        padding: MatrixPaddingOption.LEFT,
-        padColor: LedColor.BLUE,
+        padding: MatrixPaddingOption.Left,
+        padColor: LedColor.Blue,
     },
 );
 ```
@@ -243,8 +250,8 @@ Example:
 ```typescript
 import {LedColor, drawFrame} from 'ws2812draw';
 drawFrame([
-    [LedColor.BLACK, LedColor.RED, LedColor.ORANGE],
-    [LedColor.BLACK, LedColor.RED, LedColor.ORANGE],
+    [LedColor.Black, LedColor.Red, LedColor.Orange],
+    [LedColor.Black, LedColor.Red, LedColor.Orange],
 ]);
 ```
 

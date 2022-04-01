@@ -1,3 +1,5 @@
+import {MatrixPaddingOption} from './matrix-options';
+
 export class MatrixError extends Error {
     public name = 'MatrixError';
 }
@@ -59,30 +61,6 @@ export function chopMatrix<T>(matrix: T[][], index: number, length?: number): T[
     );
 }
 
-/**
- * Used to determine how to pad matrices.
- * The value name (ex. LEFT) is the side of the given matrix that the padding is added to.
- * The opposite side remains unchagned. (ex. LEFT padding will result in the left side of the matrix being filled up)
- */
-export enum MatrixPaddingOption {
-    /**
-     * add padding on the left side (image gets pushed to right side)
-     */
-    LEFT = 'left',
-    /**
-     * add padding on the right side (image gets pushed to left side)
-     */
-    RIGHT = 'right',
-    /**
-     * add padding to both sides evenly (image gets centered)
-     */
-    BOTH = 'both',
-    /**
-     * don't add any padding
-     */
-    NONE = 'none',
-}
-
 export function assertConsistentMatrixSize<T>(matrix: T[][]): void {
     if (matrix.length) {
         const width = matrix[0].length;
@@ -106,22 +84,22 @@ export function getPadDifference<T>(
         };
     }
     switch (paddingStyle) {
-        case MatrixPaddingOption.LEFT:
+        case MatrixPaddingOption.Left:
             return {
                 left: difference,
                 right: 0,
             };
-        case MatrixPaddingOption.RIGHT:
+        case MatrixPaddingOption.Right:
             return {
                 left: 0,
                 right: difference,
             };
-        case MatrixPaddingOption.BOTH:
+        case MatrixPaddingOption.Both:
             return {
                 left: Math.floor(difference / 2),
                 right: Math.ceil(difference / 2),
             };
-        case MatrixPaddingOption.NONE:
+        case MatrixPaddingOption.None:
             return {
                 left: 0,
                 right: 0,
@@ -133,9 +111,9 @@ export function padMatrix<T>(
     matrix: T[][],
     width: number,
     paddingFill: T,
-    paddingStyle: MatrixPaddingOption = MatrixPaddingOption.LEFT,
+    paddingStyle: MatrixPaddingOption = MatrixPaddingOption.Left,
 ): T[][] {
-    if (matrix[0].length < width && paddingStyle !== MatrixPaddingOption.NONE) {
+    if (matrix[0].length < width && paddingStyle !== MatrixPaddingOption.None) {
         const {left, right} = getPadDifference(matrix, width, paddingStyle);
         const leftPadMatrix = createMatrix(
             {

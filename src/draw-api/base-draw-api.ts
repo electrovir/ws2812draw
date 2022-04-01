@@ -1,7 +1,7 @@
 import {extractErrorMessage} from 'augment-vir';
 import bindings from 'bindings';
-import {createMatrix, flattenMatrix, getMatrixSize, MatrixDimensions} from './matrix/matrix';
-import {checkSudo} from './sudo';
+import {createMatrix, flattenMatrix, getMatrixSize, MatrixDimensions} from '../matrix/matrix';
+import {checkSudo} from '../sudo';
 
 let shouldCheckSudo = true;
 
