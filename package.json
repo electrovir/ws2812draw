@@ -44,10 +44,11 @@
         "prepare": "npm run compile",
         "prepublishOnly": "npm run test:full",
         "spellcheck": "virmator spellcheck",
-        "test": "sudo -E env \"PATH=$PATH\" ts-node --transpile-only src/ts/test.ts",
+        "test": "virmator test",
         "test:color": "ts-node --transpile-only src/ts/test-color.ts",
         "test:full": "npm test && npm run spellcheck && virmator format check",
         "test:letters": "func() { npm run tsc && node dist/ts/test-text.js \"$@\"; }; func",
+        "test:matrix": "sudo -E env \"PATH=$PATH\" ts-node --transpile-only src/ts/test.ts",
         "tsc": "rm -rf dist && tsc"
     },
     "dependencies": {
