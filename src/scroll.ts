@@ -1,7 +1,14 @@
 import {LedColor} from './color';
-import {padMatrix, chopMatrix, appendMatrices, MatrixPaddingOption, createMatrix, getPadDifference} from './matrix';
-import {init, drawFrame} from './draw';
-import {overrideDefinedProperties} from './util/object';
+import {
+    padMatrix,
+    chopMatrix,
+    appendMatrices,
+    MatrixPaddingOption,
+    createMatrix,
+    getPadDifference,
+} from './matrix';
+import {initMatrix, drawFrame} from './draw';
+import {overrideDefinedProperties} from './augments/object';
 import {EventEmitter} from 'events';
 
 /**
@@ -56,7 +63,7 @@ const defaultScrollOptions: Required<DrawScrollOptions> = {
     frameDelayMs: 100,
     loopDelayMs: 0,
     padding: MatrixPaddingOption.LEFT,
-    padBackgroundColor: LedColor.BLACK,
+    padBackgroundColor: LedColor.Black,
     emptyFrameBetweenLoops: false,
     scrollDirection: 'left',
     drawAfterLastScroll: true,
@@ -103,7 +110,10 @@ export function drawScrollingImage(
 ): ScrollEmitter {
     const emitter = new EventEmitter() as InternalScrollingEventEmitter;
 
-    const options: Required<DrawScrollOptions> = overrideDefinedProperties(defaultScrollOptions, rawInputScrollOptions);
+    const options: Required<DrawScrollOptions> = overrideDefinedProperties(
+        defaultScrollOptions,
+        rawInputScrollOptions,
+    );
     function isLastLoop(loopCount: number) {
         return loopCount + 1 >= options.loopCount;
     }
@@ -122,7 +132,13 @@ export function drawScrollingImage(
         const {left, right} = getPadDifference(matrix, width, options.padding);
         fullMatrix = appendMatrices(
             fullMatrix,
-            createMatrix(matrix.length, width - (right + left), options.padBackgroundColor),
+            createMatrix(
+                {
+                    width: width - (right + left),
+                    height: matrix.length,
+                },
+                options.padBackgroundColor,
+            ),
         );
     }
 
@@ -134,14 +150,26 @@ export function drawScrollingImage(
         keepScrolling = false;
     });
 
-    init(matrix.length, width, brightness);
+    initMatrix(
+        {
+            width: width,
+            height: matrix.length,
+        },
+        brightness,
+    );
 
     function innerDrawScrollingString(pixelIndex: number, currentScrollLoop: number) {
         if (keepScrolling) {
             const matrixToChop = appendMatrices(
                 fullMatrix,
                 !options.drawAfterLastScroll && isLastLoop(currentScrollLoop)
-                    ? createMatrix(fullMatrix.length, fullMatrix[0].length, options.padBackgroundColor)
+                    ? createMatrix(
+                          {
+                              width: fullMatrix[0].length,
+                              height: fullMatrix.length,
+                          },
+                          options.padBackgroundColor,
+                      )
                     : fullMatrix,
             );
             drawFrame(
@@ -185,7 +213,9 @@ export function drawScrollingImage(
                     () => {
                         innerDrawScrollingString(startingIndex, currentScrollLoop + 1);
                     },
-                    !options.drawAfterLastScroll && isLastLoop(currentScrollLoop) ? 0 : options.loopDelayMs,
+                    !options.drawAfterLastScroll && isLastLoop(currentScrollLoop)
+                        ? 0
+                        : options.loopDelayMs,
                 );
             }
         } else {
@@ -195,5 +225,5 @@ export function drawScrollingImage(
 
     innerDrawScrollingString(startingIndex, 0);
     // the exported value should only be of the public interface
-    return (emitter as any) as ScrollEmitter;
+    return emitter as any as ScrollEmitter;
 }

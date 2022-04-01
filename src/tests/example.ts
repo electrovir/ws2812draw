@@ -1,5 +1,4 @@
-import {init, cleanUp, drawFrame} from './draw';
-import {LedColor} from '.';
+import {initMatrix, cleanUp, drawFrame, LedColor, MatrixDimensions} from '..';
 
 const colorValues = Object.keys(LedColor)
     .filter(key => isNaN(Number(key)))
@@ -39,8 +38,8 @@ function animate(increment: boolean) {
     }
 }
 
-export function testDraw(height: number, width: number, brightness: number, inputColor?: number) {
-    init(height, width, brightness);
+export function testDraw(dimensions: MatrixDimensions, brightness: number, inputColor?: number) {
+    initMatrix(dimensions, brightness);
 
     var stdin = process.stdin;
     // without this, we would only get streams once enter is pressed
@@ -75,9 +74,9 @@ export function testDraw(height: number, width: number, brightness: number, inpu
     // values = Array(height)
     //     .fill(0)
     //     .map((_, index) => Array(width).fill(inputColor ? inputColor : colorValues[index % colorValues.length]));
-    values = Array(height)
+    values = Array(dimensions.height)
         .fill(0)
-        .map(() => Array(width).fill(LedColor.GREEN));
+        .map(() => Array(dimensions.width).fill(LedColor.Green));
     console.log('Starting led test');
     console.log(`Starting with frame delay of ${frameDelay}ms`);
     console.log('Type "=" to increase delay, "-" to decrease');
@@ -85,12 +84,14 @@ export function testDraw(height: number, width: number, brightness: number, inpu
     animate(inputColor == undefined);
 }
 
-if (!module.parent) {
-    const height = Number(process.argv[2]) || 1;
-    const width = Number(process.argv[3]) || 8;
+function main() {
+    const width = Number(process.argv[2]) || 8;
+    const height = Number(process.argv[3]) || 8;
     const brightness = Number(process.argv[4]) || 50;
     const color = Number(process.argv[5]) || undefined;
     console.log(`Running with led array size ${height}x${width}, brightness ${brightness}`);
 
-    testDraw(height, width, brightness, color);
+    testDraw({width, height}, brightness, color);
 }
+
+main();

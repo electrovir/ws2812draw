@@ -2,6 +2,11 @@ export class MatrixError extends Error {
     public name = 'MatrixError';
 }
 
+export type MatrixDimensions = {
+    height: number;
+    width: number;
+};
+
 export function appendMatrices<T>(...matrices: T[][][]): T[][] {
     matrices.forEach(matrix => assertConsistentMatrixSize(matrix));
     return matrices.reduce((accum, current) => {
@@ -26,12 +31,12 @@ export function flattenMatrix(inputArray: number[][]): number[] {
     }, []);
 }
 
-export function getMatrixSize<T>(matrix: T[][]) {
+export function getMatrixSize<T>(matrix: T[][]): MatrixDimensions {
     assertConsistentMatrixSize(matrix);
 
     return {
-        height: matrix.length,
         width: matrix[0].length,
+        height: matrix.length,
     };
 }
 
@@ -39,10 +44,10 @@ export function createArray<T>(width: number, fillValue: T): T[] {
     return Array(width).fill(fillValue);
 }
 
-export function createMatrix<T>(height: number, width: number, fillValue: T): T[][] {
-    return Array(height)
+export function createMatrix<T>(dimensions: MatrixDimensions, fillValue: T): T[][] {
+    return Array(dimensions.height)
         .fill(0)
-        .map(() => createArray(width, fillValue));
+        .map(() => createArray(dimensions.width, fillValue));
 }
 
 export function chopMatrix<T>(matrix: T[][], index: number, length?: number): T[][] {
@@ -132,8 +137,20 @@ export function padMatrix<T>(
 ): T[][] {
     if (matrix[0].length < width && paddingStyle !== MatrixPaddingOption.NONE) {
         const {left, right} = getPadDifference(matrix, width, paddingStyle);
-        const leftPadMatrix = createMatrix(matrix.length, left, paddingFill);
-        const rightPadMatrix = createMatrix(matrix.length, right, paddingFill);
+        const leftPadMatrix = createMatrix(
+            {
+                width: left,
+                height: matrix.length,
+            },
+            paddingFill,
+        );
+        const rightPadMatrix = createMatrix(
+            {
+                width: right,
+                height: matrix.length,
+            },
+            paddingFill,
+        );
         const appendedMatrix = appendMatrices(leftPadMatrix, matrix, rightPadMatrix);
 
         return appendedMatrix;

@@ -1,33 +1,32 @@
-import * as draw from './';
-import {getEnumTypedValues} from './util/object';
+import * as draw from '..';
+import {getEnumTypedValues} from '../augments/object';
 import {EventEmitter} from 'events';
 
 type Test = {run: () => draw.ScrollEmitter | void; label: string; duration?: number};
 
-const HEIGHT = 8;
-const WIDTH = 32;
-const BRIGHTNESS = 100;
-const DEFAULT_DURATION = 5000;
+const dimensions = {width: 32, height: 8};
+const brightness = 100;
+const defaultDuration = 5000;
 
 function runScrollRainbowTest(options?: draw.DrawScrollOptions) {
     const colorValues = getEnumTypedValues(draw.LedColor);
-    const colors = draw.matrix
-        .createArray(HEIGHT, Array(colorValues.length).fill(0))
+    const colors = draw
+        .createArray(dimensions.height, Array(colorValues.length).fill(0))
         .map(row => row.map((_, index) => colorValues[index]));
-    return draw.drawScrollingImage(WIDTH, BRIGHTNESS, colors, options);
+    return draw.drawScrollingImage(dimensions.width, brightness, colors, options);
 }
 
 const tests: Test[] = [
     // 0
     {
         run: () => {
-            draw.drawStill(BRIGHTNESS, draw.matrix.createMatrix(HEIGHT, WIDTH, draw.LedColor.CYAN));
+            draw.drawStill(brightness, draw.createMatrix(dimensions, draw.LedColor.Cyan));
             setTimeout(() => {
-                draw.drawStill(BRIGHTNESS, draw.matrix.createMatrix(HEIGHT, WIDTH, draw.LedColor.RED));
-            }, DEFAULT_DURATION / 3);
+                draw.drawStill(brightness, draw.createMatrix(dimensions, draw.LedColor.Red));
+            }, defaultDuration / 3);
             setTimeout(() => {
-                draw.drawStill(BRIGHTNESS, draw.matrix.createMatrix(HEIGHT, WIDTH, draw.LedColor.GREEN));
-            }, (DEFAULT_DURATION * 2) / 3);
+                draw.drawStill(brightness, draw.createMatrix(dimensions, draw.LedColor.Green));
+            }, (defaultDuration * 2) / 3);
         },
         label: 'Should draw multiple full colors on whole display',
     },
@@ -37,13 +36,13 @@ const tests: Test[] = [
             let stillGoing = true;
             const colorValues = getEnumTypedValues(draw.LedColor);
             const giantMatrix = colorValues.reduce((accum: draw.LedColor[][], color) => {
-                return draw.matrix.appendMatrices(accum, draw.matrix.createMatrix(HEIGHT, WIDTH, color));
+                return draw.appendMatrices(accum, draw.createMatrix(dimensions, color));
             }, []);
 
             let backwards = false;
 
             function animate(index: number, delay: number) {
-                const windowedMatrixToDraw = draw.matrix.chopMatrix(giantMatrix, index, WIDTH);
+                const windowedMatrixToDraw = draw.chopMatrix(giantMatrix, index, dimensions.width);
                 draw.drawFrame(windowedMatrixToDraw);
                 if (stillGoing) {
                     setTimeout(() => {
@@ -54,7 +53,7 @@ const tests: Test[] = [
                             nextIndex++;
                         }
 
-                        if (nextIndex >= giantMatrix[0].length - WIDTH) {
+                        if (nextIndex >= giantMatrix[0].length - dimensions.width) {
                             nextIndex--;
                             backwards = true;
                         } else if (nextIndex < 0) {
@@ -68,7 +67,7 @@ const tests: Test[] = [
                 }
             }
 
-            draw.init(HEIGHT, WIDTH, 50);
+            draw.initMatrix(dimensions, 50);
             animate(0, 0);
 
             const emitter = new EventEmitter() as draw.ScrollEmitter;
@@ -140,7 +139,7 @@ const tests: Test[] = [
         run: () =>
             runScrollRainbowTest({
                 padding: draw.MatrixPaddingOption.LEFT,
-                padBackgroundColor: draw.LedColor.TURQUOISE,
+                padBackgroundColor: draw.LedColor.Turquoise,
             }),
         label: 'Should pad rainbow with color',
         duration: 10000,
@@ -149,16 +148,16 @@ const tests: Test[] = [
     {
         run: () => {
             // this can't be too long or it clips
-            draw.drawText(BRIGHTNESS, 'hi!');
+            draw.drawText(brightness, 'hi!');
         },
         label: 'Should draw text',
     },
     // 12
     {
         run: () => {
-            draw.drawText(BRIGHTNESS, 'hi!', {
-                foregroundColor: draw.LedColor.CYAN,
-                backgroundColor: draw.LedColor.RED,
+            draw.drawText(brightness, 'hi!', {
+                foregroundColor: draw.LedColor.Cyan,
+                backgroundColor: draw.LedColor.Red,
             });
         },
         label: 'Should draw text with colors',
@@ -166,8 +165,8 @@ const tests: Test[] = [
     // 13
     {
         run: () => {
-            draw.drawText(BRIGHTNESS, "I'm!", {
-                foregroundColor: draw.LedColor.CYAN,
+            draw.drawText(brightness, "I'm!", {
+                foregroundColor: draw.LedColor.Cyan,
                 monospace: true,
             });
         },
@@ -176,11 +175,11 @@ const tests: Test[] = [
     // 14
     {
         run: () => {
-            draw.drawText(BRIGHTNESS, "I'm!", [
-                {foregroundColor: draw.LedColor.CYAN},
-                {backgroundColor: draw.LedColor.RED, monospace: true},
-                {foregroundColor: draw.LedColor.RED},
-                {foregroundColor: draw.LedColor.BLACK, backgroundColor: draw.LedColor.YELLOW},
+            draw.drawText(brightness, "I'm!", [
+                {foregroundColor: draw.LedColor.Cyan},
+                {backgroundColor: draw.LedColor.Red, monospace: true},
+                {foregroundColor: draw.LedColor.Red},
+                {foregroundColor: draw.LedColor.Black, backgroundColor: draw.LedColor.Yellow},
             ]);
         },
         label: 'Should allow options for each character',
@@ -189,9 +188,9 @@ const tests: Test[] = [
     // 15
     {
         run: () => {
-            draw.drawText(BRIGHTNESS, "I'm!", [
-                {foregroundColor: draw.LedColor.CYAN},
-                {backgroundColor: draw.LedColor.RED, monospace: true},
+            draw.drawText(brightness, "I'm!", [
+                {foregroundColor: draw.LedColor.Cyan},
+                {backgroundColor: draw.LedColor.Red, monospace: true},
             ]);
         },
         label: 'Should fall through options to following characters',
@@ -200,7 +199,7 @@ const tests: Test[] = [
     // 16
     {
         run: () => {
-            return draw.drawScrollingText(WIDTH, BRIGHTNESS, 'Hellow!', {}, {});
+            return draw.drawScrollingText(dimensions.width, brightness, 'Hellow!', {}, {});
         },
         label: 'Should scroll text',
         duration: 10000,
@@ -209,12 +208,12 @@ const tests: Test[] = [
     {
         run: () => {
             return draw.drawScrollingText(
-                WIDTH,
-                BRIGHTNESS,
+                dimensions.width,
+                brightness,
                 'Hellow!',
                 {
-                    backgroundColor: draw.LedColor.YELLOW,
-                    foregroundColor: draw.LedColor.MAGENTA,
+                    backgroundColor: draw.LedColor.Yellow,
+                    foregroundColor: draw.LedColor.Magenta,
                 },
                 {},
             );
@@ -226,11 +225,11 @@ const tests: Test[] = [
     {
         run: () => {
             return draw.drawScrollingText(
-                WIDTH,
-                BRIGHTNESS,
+                dimensions.width,
+                brightness,
                 'Hellow!',
                 {
-                    foregroundColor: draw.LedColor.RED,
+                    foregroundColor: draw.LedColor.Red,
                 },
                 {loopCount: 1},
             );
@@ -242,7 +241,7 @@ const tests: Test[] = [
     {
         run: () => {
             const matrix = draw.textToColorMatrix('hmm');
-            draw.drawStill(BRIGHTNESS, matrix);
+            draw.drawStill(brightness, matrix);
         },
         label: 'Should generate text image and draw',
     },
@@ -260,7 +259,7 @@ const tests: Test[] = [
                 [0, 0, 0, 1, 1],
             ]);
 
-            draw.drawText(BRIGHTNESS, '< < <');
+            draw.drawText(brightness, '< < <');
         },
         label: 'Should register custom letter',
     },
@@ -269,11 +268,11 @@ const tests: Test[] = [
         run: () => {
             const supported = draw.getSupportedLetters().join('');
             return draw.drawScrollingText(
-                WIDTH,
-                BRIGHTNESS,
+                dimensions.width,
+                brightness,
                 supported,
                 {
-                    foregroundColor: draw.LedColor.CYAN,
+                    foregroundColor: draw.LedColor.Cyan,
                 },
                 {frameDelayMs: 200},
             );
@@ -285,10 +284,14 @@ const tests: Test[] = [
     {
         run: () => {
             draw.drawText(
-                BRIGHTNESS,
+                brightness,
                 'hi',
                 {},
-                {padColor: draw.LedColor.BLACK, padding: draw.MatrixPaddingOption.BOTH, width: WIDTH},
+                {
+                    padColor: draw.LedColor.Black,
+                    padding: draw.MatrixPaddingOption.BOTH,
+                    width: dimensions.width,
+                },
             );
         },
         label: 'Should draw aligned text',
@@ -298,13 +301,13 @@ const tests: Test[] = [
         run: () => {
             let stillGoing = true;
             const colorValues = getEnumTypedValues(draw.LedColor).filter(
-                color => color !== draw.LedColor.BLACK && color !== draw.LedColor.WHITE,
+                color => color !== draw.LedColor.Black && color !== draw.LedColor.White,
             );
             let colorIndex = 0;
             let nextColorIndex = 1;
             const ratioIncrement = 0.05;
             let currentDiffRatio = 0;
-            let colorMatrix = draw.matrix.createMatrix(HEIGHT, WIDTH, colorValues[colorIndex]);
+            let colorMatrix = draw.createMatrix(dimensions, colorValues[colorIndex]);
 
             const emitter = new EventEmitter() as draw.ScrollEmitter;
 
@@ -324,13 +327,13 @@ const tests: Test[] = [
                             currentDiffRatio = ratioIncrement;
                         }
 
-                        const colorToDraw = draw.color.diffColors(
+                        const colorToDraw = draw.diffColors(
                             colorValues[colorIndex],
                             colorValues[nextColorIndex],
                             currentDiffRatio,
                         );
 
-                        colorMatrix = draw.matrix.createMatrix(HEIGHT, WIDTH, colorToDraw);
+                        colorMatrix = draw.createMatrix(dimensions, colorToDraw);
                         animate(delay);
                     }, delay);
                 } else {
@@ -338,7 +341,7 @@ const tests: Test[] = [
                 }
             }
 
-            draw.init(HEIGHT, WIDTH, 50);
+            draw.initMatrix(dimensions, 50);
             animate(0);
 
             emitter.on('stop' as any, () => {
@@ -353,15 +356,38 @@ const tests: Test[] = [
     {
         run: () => {
             const colorValues = getEnumTypedValues(draw.LedColor);
-            const colorWidth = Math.floor(WIDTH / colorValues.length);
+            const colorWidth = Math.floor(dimensions.width / colorValues.length);
 
-            const colorMatrix = colorValues.reduce((accum, currentColor) => {
-                return draw.matrix.appendMatrices(accum, draw.matrix.createMatrix(HEIGHT, colorWidth, currentColor));
-            }, draw.matrix.createMatrix(HEIGHT, 0, draw.LedColor.CYAN) as draw.LedColor[][]);
+            const colorMatrix = colorValues.reduce(
+                (accum, currentColor) => {
+                    return draw.appendMatrices(
+                        accum,
+                        draw.createMatrix(
+                            {
+                                ...dimensions,
+                                width: colorWidth,
+                            },
+                            currentColor,
+                        ),
+                    );
+                },
+                draw.createMatrix(
+                    {
+                        ...dimensions,
+                        width: 0,
+                    },
+                    draw.LedColor.Cyan,
+                ) as draw.LedColor[][],
+            );
 
             draw.drawStill(
-                BRIGHTNESS,
-                draw.matrix.padMatrix(colorMatrix, WIDTH, draw.LedColor.BLACK, draw.MatrixPaddingOption.LEFT),
+                brightness,
+                draw.padMatrix(
+                    colorMatrix,
+                    dimensions.width,
+                    draw.LedColor.Black,
+                    draw.MatrixPaddingOption.LEFT,
+                ),
             );
         },
         label: 'Color brightness comparisons',
@@ -405,7 +431,11 @@ const tests: Test[] = [
     },
     // 28
     {
-        run: () => runScrollRainbowTest({padding: draw.MatrixPaddingOption.NONE, scrollDirection: 'right'}),
+        run: () =>
+            runScrollRainbowTest({
+                padding: draw.MatrixPaddingOption.NONE,
+                scrollDirection: 'right',
+            }),
         label: 'Should work scrolling right',
         duration: 10000,
     },
@@ -413,10 +443,10 @@ const tests: Test[] = [
     {
         run: () =>
             draw.drawScrollingText(
-                WIDTH,
-                BRIGHTNESS,
+                dimensions.width,
+                brightness,
                 'Hi',
-                {foregroundColor: draw.LedColor.CYAN},
+                {foregroundColor: draw.LedColor.Cyan},
                 {
                     emptyFrameBetweenLoops: true,
                     loopDelayMs: 2000,
@@ -431,10 +461,15 @@ const tests: Test[] = [
     {
         run: () =>
             draw.drawText(
-                BRIGHTNESS,
+                brightness,
                 'Hi',
-                {foregroundColor: draw.LedColor.CYAN},
-                {width: WIDTH, padding: draw.MatrixPaddingOption.LEFT},
+                {
+                    foregroundColor: draw.LedColor.Cyan,
+                },
+                {
+                    width: dimensions.width,
+                    padding: draw.MatrixPaddingOption.LEFT,
+                },
             ),
         label: 'Should draw short, padded text normally',
         duration: 10000,
@@ -443,10 +478,10 @@ const tests: Test[] = [
     {
         run: () => {
             const emitter = draw.drawScrollingText(
-                WIDTH,
-                BRIGHTNESS,
+                dimensions.width,
+                brightness,
                 'this no fit on screen',
-                {foregroundColor: draw.LedColor.CYAN},
+                {foregroundColor: draw.LedColor.Cyan},
                 {
                     emptyFrameBetweenLoops: true,
                     loopDelayMs: 2000,
@@ -458,10 +493,15 @@ const tests: Test[] = [
             );
             emitter.on('done', () => {
                 draw.drawText(
-                    BRIGHTNESS,
+                    brightness,
                     'done',
-                    {foregroundColor: draw.LedColor.RED},
-                    {width: WIDTH, padding: draw.MatrixPaddingOption.BOTH},
+                    {
+                        foregroundColor: draw.LedColor.Red,
+                    },
+                    {
+                        width: dimensions.width,
+                        padding: draw.MatrixPaddingOption.BOTH,
+                    },
                 );
             });
         },
@@ -480,7 +520,7 @@ function countDown(time: number) {
 
 async function runTest(test: Test) {
     console.log(`Testing: ${test.label}`);
-    const duration = test.duration || DEFAULT_DURATION;
+    const duration = test.duration || defaultDuration;
     countDown(duration);
     const emitter = test.run();
     return await Promise.all([

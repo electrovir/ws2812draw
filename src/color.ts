@@ -8,17 +8,17 @@
  * lower brightness. For example, at brightness 7 ORANGE and RED look the same.
  */
 export enum LedColor {
-    BLACK /*         */ = 0x00000000,
-    RED /*           */ = 0x0000002d,
-    ORANGE /*        */ = 0x0000082d,
-    YELLOW /*        */ = 0x00001719,
-    GREEN /*         */ = 0x00001c00,
-    TURQUOISE /*     */ = 0x00081e00,
-    CYAN /*          */ = 0x00121200,
-    BLUE /*          */ = 0x00200000,
-    VIOLET /*        */ = 0x001a0009,
-    MAGENTA /*       */ = 0x00080017,
-    WHITE /*         */ = 0x000c0c0c,
+    Black /*         */ = 0x00000000,
+    Red /*           */ = 0x0000002d,
+    Orange /*        */ = 0x0000082d,
+    Yellow /*        */ = 0x00001719,
+    Green /*         */ = 0x00001c00,
+    Turquoise /*     */ = 0x00081e00,
+    Cyan /*          */ = 0x00121200,
+    Blue /*          */ = 0x00200000,
+    Violet /*        */ = 0x001a0009,
+    Magenta /*       */ = 0x00080017,
+    White /*         */ = 0x000c0c0c,
 }
 
 export function diffColors(a: LedColor, b: LedColor, ratio: number | ColorChannels = 0.5) {

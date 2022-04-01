@@ -1,9 +1,16 @@
 import {LedColor} from './color';
-import {stringToLetterMatrix, monospacePadLetter, emptyLetter, letterSpacer} from './letter';
-import {getMatrixSize, createMatrix, maskMatrix, appendMatrices, MatrixPaddingOption, padMatrix} from './matrix';
+import {stringToLetterMatrix, monospacePadLetter, letterSpacer} from './letter';
+import {
+    getMatrixSize,
+    createMatrix,
+    maskMatrix,
+    appendMatrices,
+    MatrixPaddingOption,
+    padMatrix,
+} from './matrix';
 import {drawStill} from './draw';
 import {DrawScrollOptions, drawScrollingImage, ScrollEmitter} from './scroll';
-import {overrideDefinedProperties} from './util/object';
+import {overrideDefinedProperties} from './augments/object';
 
 /**
  * Options for drawing strings or characters.
@@ -19,8 +26,8 @@ export type LetterOptions = Partial<{
 }>;
 
 const defaultTextOptions: Required<LetterOptions> = {
-    foregroundColor: LedColor.WHITE,
-    backgroundColor: LedColor.BLACK,
+    foregroundColor: LedColor.White,
+    backgroundColor: LedColor.Black,
     monospace: false,
 };
 
@@ -40,24 +47,30 @@ export type AlignmentOptions = {
  *                          See LetterOptions type for available options.
  * @returns              array of color values to be passed into draw methods
  */
-export function textToColorMatrix(input: string, inputOptions: LetterOptions | LetterOptions[] = {}): LedColor[][] {
+export function textToColorMatrix(
+    input: string,
+    inputOptions: LetterOptions | LetterOptions[] = {},
+): LedColor[][] {
     const options = Array.isArray(inputOptions)
-        ? inputOptions.map(inputOption => overrideDefinedProperties(defaultTextOptions, inputOption))
+        ? inputOptions.map(inputOption =>
+              overrideDefinedProperties(defaultTextOptions, inputOption),
+          )
         : overrideDefinedProperties(defaultTextOptions, inputOptions);
 
     const letters = stringToLetterMatrix(input);
     let lastOptions = {};
     const coloredTextMatrix = letters
         .map((currentLetter, index) => {
-            const currentOptions = (Array.isArray(options) ? options[index] : options) || lastOptions;
+            const currentOptions =
+                (Array.isArray(options) ? options[index] : options) || lastOptions;
             const isMonospace = currentOptions.monospace;
             const foregroundColor = currentOptions.foregroundColor;
             const backgroundColor = currentOptions.backgroundColor;
 
             const letterMatrix = isMonospace ? monospacePadLetter(currentLetter) : currentLetter;
 
-            const {height, width} = getMatrixSize(letterMatrix);
-            const colors = createMatrix(height, width, foregroundColor);
+            const dimensions = getMatrixSize(letterMatrix);
+            const colors = createMatrix(dimensions, foregroundColor);
 
             if (currentOptions) {
                 // save off the current character's options in case the options array is only partially full
@@ -67,8 +80,13 @@ export function textToColorMatrix(input: string, inputOptions: LetterOptions | L
             return masked;
         })
         .reduce((accum: LedColor[][], currentLetterMatrix, index) => {
-            const currentOptions = (Array.isArray(options) ? options[index] : options) || lastOptions;
-            return appendMatrices(accum, letterSpacer(currentOptions.backgroundColor), currentLetterMatrix);
+            const currentOptions =
+                (Array.isArray(options) ? options[index] : options) || lastOptions;
+            return appendMatrices(
+                accum,
+                letterSpacer(currentOptions.backgroundColor),
+                currentLetterMatrix,
+            );
         }, []);
 
     return coloredTextMatrix;
@@ -91,7 +109,8 @@ export function drawText(
 ): void {
     let matrix = textToColorMatrix(input, options);
     if (alignmentOptions) {
-        const padColor = alignmentOptions.padColor == undefined ? LedColor.BLACK : alignmentOptions.padColor;
+        const padColor =
+            alignmentOptions.padColor == undefined ? LedColor.Black : alignmentOptions.padColor;
         matrix = padMatrix(matrix, alignmentOptions.width, padColor, alignmentOptions.padding);
     }
     drawStill(brightness, matrix);

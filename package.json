@@ -28,12 +28,12 @@
         "ws2812draw-test": "dist/ts/test.js"
     },
     "scripts": {
-        "build": "rm -rf build && node-gyp configure && node-gyp build",
-        "compile": "node-gyp build && npm run tsc",
-        "example": "node dist/ts/example.js",
+        "build": "node-gyp configure && node-gyp build",
+        "compile": "rm -rf dist && npm run tsc",
+        "example": "sudo -E env \"PATH=$PATH\" node dist/tests/example.js",
         "format": "prettier --write **/*.ts **/*.json",
         "prepare": "npm run compile",
-        "test-addon": "node-gyp configure && node-gyp build && tsc && sudo -E env \"PATH=$PATH\" node dist/ts/index.js",
+        "test-addon": "npm run build && npm run compile && sudo -E env \"PATH=$PATH\" node dist/tests/test.js",
         "test": "sudo -E env \"PATH=$PATH\" ts-node --transpile-only src/ts/test.ts",
         "test-letters": "func() { npm run tsc && node dist/ts/test-text.js \"$@\"; }; func",
         "test:color": "ts-node --transpile-only src/ts/test-color.ts",

@@ -1,7 +1,7 @@
-import {LedColor} from '.';
-import {drawScrollingText} from './text';
+import {LedColor} from '..';
+import {drawScrollingText} from '..';
 
-if (!module.parent) {
+function testText() {
     const inputBrightness = process.argv[2];
     const inputColor = process.argv[3].toUpperCase();
     const inputString = process.argv[4];
@@ -12,7 +12,7 @@ if (!module.parent) {
     if (!LedColor.hasOwnProperty(inputColor)) {
         throw new Error(`Invalid color: "${inputColor}"`);
     }
-    const color = (LedColor[inputColor as any] as any) as LedColor;
+    const color = LedColor[inputColor as any] as any as LedColor;
     console.log(count);
     const options = {
         loopCount: count == undefined || isNaN(count) ? -1 : count,
@@ -24,3 +24,5 @@ if (!module.parent) {
     // drawString(inputString, color, Number(inputBrightness));
     drawScrollingText(32, Number(inputBrightness), inputString, options);
 }
+
+testText();
