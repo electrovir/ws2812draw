@@ -1,15 +1,15 @@
+import {EventEmitter} from 'events';
+import {overrideDefinedProperties} from './augments/object';
 import {LedColor} from './color';
+import {drawFrame, initMatrix} from './draw';
 import {
-    padMatrix,
-    chopMatrix,
     appendMatrices,
-    MatrixPaddingOption,
+    chopMatrix,
     createMatrix,
     getPadDifference,
+    MatrixPaddingOption,
+    padMatrix,
 } from './matrix';
-import {initMatrix, drawFrame} from './draw';
-import {overrideDefinedProperties} from './augments/object';
-import {EventEmitter} from 'events';
 
 /**
  * Options for scrolling.
@@ -150,13 +150,10 @@ export function drawScrollingImage(
         keepScrolling = false;
     });
 
-    initMatrix(
-        {
-            width: width,
-            height: matrix.length,
-        },
-        brightness,
-    );
+    initMatrix(brightness, {
+        width,
+        height: matrix.length,
+    });
 
     function innerDrawScrollingString(pixelIndex: number, currentScrollLoop: number) {
         if (keepScrolling) {

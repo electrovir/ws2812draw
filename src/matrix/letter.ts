@@ -1,5 +1,5 @@
 import {appendMatrices} from './matrix';
-import {LedColor} from './color';
+import {LedColor} from '../color';
 
 type LetterRow =
     | [number, number, number, number, number, number]

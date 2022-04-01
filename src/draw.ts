@@ -1,5 +1,16 @@
+import {extractErrorMessage} from 'augment-vir';
 import bindings from 'bindings';
-import {flattenMatrix, getMatrixSize, createMatrix, MatrixDimensions} from './matrix';
+import {createMatrix, flattenMatrix, getMatrixSize, MatrixDimensions} from './matrix/matrix';
+import {checkSudo} from './sudo';
+
+let shouldCheckSudo = true;
+
+/**
+ * This library checks for sudo perimssions to assist in debugging. To disable those checks, call this function. Note that if you don't run this library with sudo permissions, it probably won't work.
+ */
+export function ignoreSudoCheck() {
+    shouldCheckSudo = false;
+}
 
 interface CApi {
     initMatrix(width: number, height: number, brightness: number): boolean;
@@ -9,29 +20,41 @@ interface CApi {
     test(): string;
 }
 
-function wrapApiCall<T>(callback: () => T): T {
-    try {
-        return callback();
-    } catch (error) {
-        throw error;
-    }
-}
-
-const ws2812drawApi: CApi = bindings('ws2812draw');
-
-const brightnessMax = 255;
-const brightnessMin = 0;
-
 export class Ws2812drawError extends Error {
     public name = 'Ws2812drawError';
 }
+
+function createApiCaller(): <T>(callback: (api: CApi) => T) => T {
+    const ws2812drawApi: CApi = bindings('ws2812draw');
+
+    return <T>(callback: (api: CApi) => T) => {
+        try {
+            if (shouldCheckSudo) {
+                checkSudo();
+            }
+
+            const callbackResult: T = callback(ws2812drawApi);
+            return callbackResult;
+        } catch (error) {
+            const errorMessage = extractErrorMessage(error);
+            throw new Ws2812drawError(errorMessage);
+        }
+    };
+}
+
+const makeApiCall = createApiCaller();
+
+const brightnessMax = 255;
+const brightnessMin = 0;
 
 function validateBrightness(brightness: any): asserts brightness is number {
     if (isNaN(brightness) || typeof brightness !== 'number') {
         throw new Ws2812drawError(`invalid brightness value: "${brightness}"`);
     }
     if (brightness > brightnessMax || brightness < brightnessMin) {
-        throw new Ws2812drawError('brightness (${brightness}) is out of range: [${BRIGHTNESS_MIN}, ${BRIGHTNESS_MAX}]');
+        throw new Ws2812drawError(
+            'brightness (${brightness}) is out of range: [${BRIGHTNESS_MIN}, ${BRIGHTNESS_MAX}]',
+        );
     }
 }
 
@@ -43,7 +66,9 @@ function validateBrightness(brightness: any): asserts brightness is number {
 export function drawStill(brightness: number, colorMatrix: number[][]): boolean {
     validateBrightness(brightness);
     const dimensions = getMatrixSize(colorMatrix);
-    const result = ws2812drawApi.drawStill(dimensions.width, dimensions.height, brightness, flattenMatrix(colorMatrix));
+    const result = makeApiCall(api =>
+        api.drawStill(dimensions.width, dimensions.height, brightness, flattenMatrix(colorMatrix)),
+    );
     if (!result) {
         throw new Ws2812drawError('initialization for drawStill failed');
     }
@@ -55,9 +80,11 @@ export function drawStill(brightness: number, colorMatrix: number[][]): boolean 
  * @param brightness  led brightness, a number between 0 and 255 inclusive
  * @returns           true on init success, otherwise false
  */
-export function initMatrix(dimensions: MatrixDimensions, brightness: number): boolean {
+export function initMatrix(brightness: number, dimensions: MatrixDimensions): boolean {
     validateBrightness(brightness);
-    const result = ws2812drawApi.initMatrix(dimensions.width, dimensions.height, brightness);
+    const result = makeApiCall(api =>
+        api.initMatrix(dimensions.width, dimensions.height, brightness),
+    );
     if (!result) {
         throw new Ws2812drawError(`initialization failed`);
     }
@@ -68,7 +95,7 @@ export function initMatrix(dimensions: MatrixDimensions, brightness: number): bo
  * Frees up all memory allocated by init
  */
 export function cleanUp() {
-    ws2812drawApi.cleanUp();
+    makeApiCall(api => api.cleanUp());
 }
 
 /**
@@ -78,13 +105,17 @@ export function cleanUp() {
  * @returns            true on draw success, otherwise false
  */
 export function drawFrame(colorMatrix: number[][]): boolean {
-    const result = ws2812drawApi.drawFrame(flattenMatrix(colorMatrix));
+    const result = makeApiCall(api => api.drawFrame(flattenMatrix(colorMatrix)));
     if (!result) {
         throw new Ws2812drawError(`must be initialized before drawing a frame`);
     }
     return result;
 }
 
-export function drawSolidColor(dimensions: MatrixDimensions, brightness: number, color: number): boolean {
+export function drawSolidColor(
+    brightness: number,
+    dimensions: MatrixDimensions,
+    color: number,
+): boolean {
     return drawStill(brightness, createMatrix(dimensions, color));
 }

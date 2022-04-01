@@ -1,4 +1,4 @@
-import {initMatrix, cleanUp, drawFrame, LedColor, MatrixDimensions} from '..';
+import {cleanUp, drawFrame, initMatrix, LedColor, MatrixDimensions} from '..';
 
 const colorValues = Object.keys(LedColor)
     .filter(key => isNaN(Number(key)))
@@ -38,8 +38,8 @@ function animate(increment: boolean) {
     }
 }
 
-export function testDraw(dimensions: MatrixDimensions, brightness: number, inputColor?: number) {
-    initMatrix(dimensions, brightness);
+export function testDraw(brightness: number, dimensions: MatrixDimensions, inputColor?: number) {
+    initMatrix(brightness, dimensions);
 
     var stdin = process.stdin;
     // without this, we would only get streams once enter is pressed
@@ -91,7 +91,7 @@ function main() {
     const color = Number(process.argv[5]) || undefined;
     console.log(`Running with led array size ${height}x${width}, brightness ${brightness}`);
 
-    testDraw({width, height}, brightness, color);
+    testDraw(brightness, {width, height}, color);
 }
 
 main();

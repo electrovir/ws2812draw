@@ -216,6 +216,12 @@ namespace ws2812drawCApi
 
         const bool initMatrixResult = ledInit(dimensions, brightness);
 
+        if (!initMatrixResult)
+        {
+            napi_throw_error(env, NULL, "Failed to initialize matrix.");
+            return nullptr;
+        }
+
         status = napi_get_boolean(env, initMatrixResult, &matrixInitReturnValue);
         if (didFail(env, status, "Failed to convert ledInit result into boolean."))
         {

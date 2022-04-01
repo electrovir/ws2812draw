@@ -67,7 +67,7 @@ const tests: Test[] = [
                 }
             }
 
-            draw.initMatrix(dimensions, 50);
+            draw.initMatrix(50, dimensions);
             animate(0, 0);
 
             const emitter = new EventEmitter() as draw.ScrollEmitter;
@@ -341,7 +341,7 @@ const tests: Test[] = [
                 }
             }
 
-            draw.initMatrix(dimensions, 50);
+            draw.initMatrix(50, dimensions);
             animate(0);
 
             emitter.on('stop' as any, () => {
