@@ -1,0 +1,3 @@
+import {cleanUp} from '..';
+
+cleanUp();

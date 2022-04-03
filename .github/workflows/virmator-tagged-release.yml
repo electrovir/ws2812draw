@@ -16,10 +16,6 @@ jobs:
               uses: actions/setup-node@v1
               with:
                   node-version: 16.x
-            - name: run test
-              run: |
-                  npm ci
-                  npm run test:full
             - name: pack and set vars
               id: vars
               run: |

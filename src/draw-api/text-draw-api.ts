@@ -2,28 +2,36 @@ import {LedColor} from '../color';
 import {padMatrix} from '../matrix/matrix';
 import {AlignmentOptions, LetterOptions} from '../matrix/matrix-options';
 import {textToColorMatrix} from '../matrix/matrix-text';
-import {drawStill} from './base-draw-api';
+import {drawStillImage} from './base-draw-api';
 
 /**
- * Draw a string directly to the led display
+ * Draw a string directly to the led display.
  *
- * @param brightness LED brightness for the display
- * @param input String to draw
- * @param options Either an array of LetterOptions to be applied to each character or a single
- *   LetterOptions to be applied to the whole string. See LetterOptions type for available options.
  * @returns True if success, otherwise false
  */
-export function drawText(
-    brightness: number,
-    input: string,
-    options: LetterOptions | LetterOptions[] = {},
-    alignmentOptions?: AlignmentOptions,
-): void {
-    let matrix = textToColorMatrix(input, options);
+export function drawText({
+    brightness,
+    text,
+    letterOptions = {},
+    alignmentOptions,
+}: {
+    /** Brightness of the LEDs. */
+    brightness: number;
+    /** Text to draw on the LEDs. */
+    text: string;
+    /**
+     * Options for how the text will be rendered. Either a single object for the whole text string
+     * or an array of objects, for each letter.
+     */
+    letterOptions?: LetterOptions | LetterOptions[] | undefined;
+    /** Options for how the text will be aligned. */
+    alignmentOptions?: AlignmentOptions | undefined;
+}): boolean {
+    let matrix = textToColorMatrix(text, letterOptions);
     if (alignmentOptions) {
         const padColor =
             alignmentOptions.padColor == undefined ? LedColor.Black : alignmentOptions.padColor;
         matrix = padMatrix(matrix, alignmentOptions.width, padColor, alignmentOptions.padding);
     }
-    drawStill(brightness, matrix);
+    return drawStillImage({brightness, imageMatrix: matrix});
 }

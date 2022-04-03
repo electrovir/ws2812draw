@@ -36,32 +36,28 @@
     },
     "scripts": {
         "build": "node-gyp configure && node-gyp build",
-        "compile": "rm -rf dist && npm run tsc",
-        "example": "sudo -E env \"PATH=$PATH\" node dist/tests/example.js",
-        "example:full:simple": "npm run build && npm run compile && npm run example:simple",
-        "example:simple": "sudo -E env \"PATH=$PATH\" node dist/tests/simple-example.js",
+        "compile": "rm -rf dist && tsc",
+        "compile:full": "npm run build && npm run compile",
+        "example": "npm run compile:full && sudo -E env \"PATH=$PATH\" node dist/tests/example.js",
+        "example:simple": "npm run compile:full && sudo -E env \"PATH=$PATH\" node dist/tests/example-simple.js",
+        "example:text": "npm run compile:full && sudo -E env \"PATH=$PATH\" node dist/tests/example-text.js",
         "format": "virmator format write",
-        "prepare": "npm run compile",
-        "prepublishOnly": "npm run test:full",
+        "install": "npm run build",
+        "prepublishOnly": "npm run compile:full && npm run test:health",
         "spellcheck": "virmator spellcheck",
-        "test": "virmator test",
-        "test:color": "ts-node --transpile-only src/ts/test-color.ts",
-        "test:full": "npm test && npm run spellcheck && virmator format check",
-        "test:letters": "func() { npm run tsc && node dist/ts/test-text.js \"$@\"; }; func",
-        "test:matrix": "sudo -E env \"PATH=$PATH\" ts-node --transpile-only src/ts/test.ts",
-        "tsc": "rm -rf dist && tsc"
+        "test": "npm run compile:full && sudo -E env \"PATH=$PATH\" node dist/tests/full-test.js",
+        "test:health": "npm run spellcheck && virmator format check && virmator code-in-markdown --check README.md"
     },
     "dependencies": {
-        "bindings": "^1.5.0",
-        "node-addon-api": "^4.3.0",
-        "node-gyp": "^9.0.0",
-        "typescript": "^4.6.3"
+        "bindings": "1.5.0",
+        "node-addon-api": "4.3.0",
+        "node-gyp": "9.0.0",
+        "typescript": "4.6.3"
     },
     "devDependencies": {
-        "@types/bindings": "^1.5.1",
-        "@types/node": "^17.0.23",
-        "prettier": "2.6.1",
+        "@types/bindings": "1.5.1",
+        "@types/node": "17.0.23",
         "ts-node": "10.7.0",
-        "virmator": "^2.0.3"
+        "virmator": "2.0.5"
     }
 }

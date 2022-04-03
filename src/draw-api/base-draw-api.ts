@@ -6,7 +6,7 @@ import {checkSudo} from '../sudo';
 let shouldCheckSudo = true;
 
 /**
- * This library checks for sudo perimssions to assist in debugging. To disable those checks, call
+ * This library checks for sudo permissions to assist in debugging. To disable those checks, call
  * this function. Note that if you don't run this library with sudo permissions, it probably won't work.
  */
 export function ignoreSudoCheck() {
@@ -59,16 +59,26 @@ function validateBrightness(brightness: any): asserts brightness is number {
     }
 }
 
+export type DrawStillInputs = {
+    /** Brightness of the LEDs. */
+    brightness: number;
+    /** 2D array of colors which comprise the still image to be drawn. */
+    imageMatrix: number[][];
+};
+
 /**
- * @param brightness Led brightness, a number between 0 and 255 inclusive
- * @param colorMatrix An array of colors for each pixel
+ * Draws an image to the LED board. Automatically initializes the board using the size of the given
+ * image matrix. This is only medium performance drawing because it has a convenient API and
+ * automatically initializes the LED board on each run. For higher performance drawing, use
+ * drawFrame (which requires the LED board to be initialized first).
+ *
  * @returns True on draw success, otherwise false
  */
-export function drawStill(brightness: number, colorMatrix: number[][]): boolean {
+export function drawStillImage({brightness, imageMatrix}: DrawStillInputs): boolean {
     validateBrightness(brightness);
-    const dimensions = getMatrixSize(colorMatrix);
+    const dimensions = getMatrixSize(imageMatrix);
     const result = makeApiCall((api) =>
-        api.drawStill(dimensions.width, dimensions.height, brightness, flattenMatrix(colorMatrix)),
+        api.drawStill(dimensions.width, dimensions.height, brightness, flattenMatrix(imageMatrix)),
     );
     if (!result) {
         throw new Ws2812drawError('initialization for drawStill failed');
@@ -76,12 +86,20 @@ export function drawStill(brightness: number, colorMatrix: number[][]): boolean 
     return result;
 }
 
+export type InitInputs = {
+    /** Brightness of the LEDs. */
+    brightness: number;
+    /** Size of the LED matrix in LED count. */
+    dimensions: MatrixDimensions;
+};
+
 /**
- * @param dimensions Size of the LED matrix
- * @param brightness Led brightness, a number between 0 and 255 inclusive
+ * Setup the matrix for drawing. This function must be called before using drawFrame. It is called
+ * automatically as part of drawStill.
+ *
  * @returns True on init success, otherwise false
  */
-export function initMatrix(brightness: number, dimensions: MatrixDimensions): boolean {
+export function initLedBoard({brightness, dimensions}: InitInputs): boolean {
     validateBrightness(brightness);
     const result = makeApiCall((api) =>
         api.initMatrix(dimensions.width, dimensions.height, brightness),
@@ -92,30 +110,38 @@ export function initMatrix(brightness: number, dimensions: MatrixDimensions): bo
     return result;
 }
 
-/** Frees up all memory allocated by init */
+/** Frees up all memory allocated by init. */
 export function cleanUp() {
     makeApiCall((api) => api.cleanUp());
 }
 
 /**
- * InitMatrix must be called before this can be used.
+ * Draws the given image to the LED board. This is higher performance than drawStill because it does
+ * not initialize the board on each draw. Thus, initLedBoard must be called before this is called.
  *
- * @param colorMatrix The matrix of colors to draw. The dimensions of this matrix should match those
- *   passed to init.
+ * @param imageMatrix The matrix of colors to draw. The dimensions of this matrix should match those
+ *   previously passed to initLedBoard.
  * @returns True on draw success, otherwise false
  */
-export function drawFrame(colorMatrix: number[][]): boolean {
-    const result = makeApiCall((api) => api.drawFrame(flattenMatrix(colorMatrix)));
+export function drawFrame(imageMatrix: number[][]): boolean {
+    const result = makeApiCall((api) => api.drawFrame(flattenMatrix(imageMatrix)));
     if (!result) {
         throw new Ws2812drawError(`must be initialized before drawing a frame`);
     }
     return result;
 }
 
-export function drawSolidColor(
-    brightness: number,
-    dimensions: MatrixDimensions,
-    color: number,
-): boolean {
-    return drawStill(brightness, createMatrix(dimensions, color));
+/**
+ * Uses drawStillImage (thus this has lower performance than drawFrame) to conveniently fill the
+ * whole LED board with a single color.
+ */
+export function drawSolidColor({
+    brightness,
+    dimensions,
+    color,
+}: InitInputs & {
+    /** Color to fill the LED board with. */
+    color: number;
+}): boolean {
+    return drawStillImage({brightness, imageMatrix: createMatrix(dimensions, color)});
 }

@@ -1,7 +1,7 @@
 import {LedColor} from '../color';
 /**
  * Used to determine how to pad matrices. The value name (ex. LEFT) is the side of the given matrix
- * that the padding is added to. The opposite side remains unchagned. (ex. LEFT padding will result
+ * that the padding is added to. The opposite side remains unchanged. (ex. LEFT padding will result
  * in the left side of the matrix being filled up)
  */
 export enum MatrixPaddingOption {
@@ -32,7 +32,9 @@ export const defaultTextOptions: Required<LetterOptions> = {
 };
 
 export type AlignmentOptions = {
+    /** Width of the LED board. */
     width: number;
     padding: MatrixPaddingOption;
-    padColor?: LedColor;
+    /** The background color of the padding. Defaults to black (no color). */
+    padColor?: LedColor | undefined;
 };

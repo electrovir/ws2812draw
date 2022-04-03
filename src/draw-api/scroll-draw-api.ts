@@ -12,29 +12,35 @@ import {
 import {LetterOptions, MatrixPaddingOption} from '../matrix/matrix-options';
 import {textToColorMatrix} from '../matrix/matrix-text';
 import {DrawScrollOptions, ScrollEmitter} from '../matrix/scroll-types';
-import {drawFrame, initMatrix} from './base-draw-api';
+import {drawFrame, DrawStillInputs, initLedBoard} from './base-draw-api';
 
 /**
  * Draw text and have it scroll across the LED display like a <marquee>
  *
- * @param input String to scroll
- * @param width Pixel count of LED display's width
- * @param brightness Brightness for LED display
- * @param letterOptions Either an array of LetterOptions to be applied to each character or a single
- *   LetterOptions to be applied to the whole string. See LetterOptions type for available options.
- * @param scrollOptions Options for scrolling. See DrawScrollOptions type for available options.
- * @returns A promise that is resolved once the scrolling has finished. If the scroll count is set
- *   to infinite (the default) it will never resolve.
+ * @returns An event emitter that can be used to control and react to the scrolling.
  */
-export function drawScrollingText(
-    width: number,
-    brightness: number,
-    input: string,
-    letterOptions: LetterOptions | LetterOptions[] = {},
-    scrollOptions: DrawScrollOptions = {},
-): ScrollEmitter {
-    const matrix = textToColorMatrix(input, letterOptions);
-    return drawScrollingImage(width, brightness, matrix, scrollOptions);
+export function drawScrollingText({
+    width,
+    brightness,
+    text,
+    letterOptions = {},
+    scrollOptions = {},
+}: Omit<DrawScrollingImageInputs, 'imageMatrix'> & {
+    /** Text to draw on the LEDs and scroll. */
+    text: string;
+    /**
+     * Options for how the text will be rendered. Either a single object for the whole text string
+     * or an array of objects, for each letter.
+     */
+    letterOptions?: LetterOptions | LetterOptions[] | undefined;
+}): ScrollEmitter {
+    const matrix = textToColorMatrix(text || ' ', letterOptions);
+    return drawScrollingImage({
+        width,
+        brightness,
+        imageMatrix: matrix,
+        scrollOptions: scrollOptions,
+    });
 }
 
 const defaultScrollOptions: Required<DrawScrollOptions> = {
@@ -57,20 +63,27 @@ interface InternalScrollingEventEmitter extends EventEmitter {
     emit(type: 'loop', count: number): boolean;
 }
 
+export type DrawScrollingImageInputs = DrawStillInputs & {
+    /**
+     * LED width count of the LED board so the scrolling logic knows when to wrap the image (2D
+     * array of colors).
+     */
+    width: number;
+    /** Options for how the image will be scrolled. */
+    scrollOptions?: DrawScrollOptions | undefined;
+};
+
 /**
- * Scrolls an image (color matrix) horizontally leftwards across the LED display
+ * Scrolls an image (a 2D array of colors) horizontally leftwards (configurable) across the LED display.
  *
- * @param matrix Color matrix to scroll
- * @param width Width of the LED display
- * @param brightness Set the LED brightness
- * @param rawInputScrollOptions Options for scrolling, see DrawScrollOptions type for available options
+ * @returns An event emitter that can be used to control and react to the scrolling.
  */
-export function drawScrollingImage(
-    width: number,
-    brightness: number,
-    matrix: LedColor[][],
-    rawInputScrollOptions: DrawScrollOptions = {},
-): ScrollEmitter {
+export function drawScrollingImage({
+    width,
+    brightness,
+    imageMatrix,
+    scrollOptions: rawInputScrollOptions = {},
+}: DrawScrollingImageInputs): ScrollEmitter {
     const emitter = new EventEmitter() as InternalScrollingEventEmitter;
 
     const options: Required<DrawScrollOptions> = overrideDefinedProperties(
@@ -80,26 +93,26 @@ export function drawScrollingImage(
     function isLastLoop(loopCount: number) {
         return loopCount + 1 >= options.loopCount;
     }
-    let fullMatrix = [...matrix];
+    let fullMatrix = [...imageMatrix];
     assertConsistentMatrixSize(fullMatrix);
 
     if (options.padding === MatrixPaddingOption.None) {
         // append the image itself until it fills the display
         while (fullMatrix[0]!.length < width) {
-            fullMatrix = appendMatrices(fullMatrix, matrix);
+            fullMatrix = appendMatrices(fullMatrix, imageMatrix);
         }
     } else {
-        fullMatrix = padMatrix(matrix, width, options.padBackgroundColor, options.padding);
+        fullMatrix = padMatrix(imageMatrix, width, options.padBackgroundColor, options.padding);
     }
 
     if (options.emptyFrameBetweenLoops) {
-        const {left, right} = getPadDifference(matrix, width, options.padding);
+        const {left, right} = getPadDifference(imageMatrix, width, options.padding);
         fullMatrix = appendMatrices(
             fullMatrix,
             createMatrix(
                 {
                     width: width - (right + left),
-                    height: matrix.length,
+                    height: imageMatrix.length,
                 },
                 options.padBackgroundColor,
             ),
@@ -114,9 +127,12 @@ export function drawScrollingImage(
         keepScrolling = false;
     });
 
-    initMatrix(brightness, {
-        width,
-        height: matrix.length,
+    initLedBoard({
+        brightness,
+        dimensions: {
+            width,
+            height: imageMatrix.length,
+        },
     });
 
     function innerDrawScrollingString(pixelIndex: number, currentScrollLoop: number) {
@@ -186,5 +202,5 @@ export function drawScrollingImage(
 
     innerDrawScrollingString(startingIndex, 0);
     // the exported value should only be of the public interface
-    return emitter as any as ScrollEmitter;
+    return emitter as unknown as ScrollEmitter;
 }

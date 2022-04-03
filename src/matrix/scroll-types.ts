@@ -5,8 +5,9 @@ import {MatrixPaddingOption} from './matrix-options';
 /**
  * Stop event: emit this to stop the scrolling
  *
- * Done event: listen to this to know when the scrolling is done loop event: listen to this to know
- * when the scroll loops (and how many times it has looped)
+ * Done event: listen to this to know when the scrolling is done
+ *
+ * Loop event: listen to this to know when the scroll loops (and how many times it has looped)
  */
 export interface ScrollEmitter extends EventEmitter {
     emit(type: 'stop'): boolean;
