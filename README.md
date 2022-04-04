@@ -18,6 +18,13 @@ Hardware wise, this uses [Pin 12 aka BCM 18](https://pinout.xyz/pinout/pin12_gpi
 
 I found that my 32x8 LED matrix can be fully driven at _very high brightness_ by the Raspberry Pi's 5v power pin: No external power supply is needed for the LEDs.
 
+# Quick test
+
+1. Clone this repo
+2. CD to it
+3. run `npm install`
+4. run `npm run example`
+
 # Sudo
 
 Root access is required to access the Raspberry Pi's lower levels and draw to the matrix.

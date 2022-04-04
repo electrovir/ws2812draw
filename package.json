@@ -1,6 +1,6 @@
 {
     "name": "ws2812draw",
-    "version": "3.0.0",
+    "version": "3.0.1",
     "description": "Draw to a ws2812 LED matrix with a Raspberry Pi",
     "keywords": [
         "ws2812",
